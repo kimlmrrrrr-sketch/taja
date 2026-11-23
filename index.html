@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>타자 레이스</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<!-- Supabase 라이브러리 (실시간 통신용) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
+<style>
+  :root { --ink:#3b3355; --muted:#8b84a3; --paper:#fff; --bg:#fff6dc; --line:#ece4d3;
+    --yellow:#ffd84d; --yellow-soft:#fff4c2; --pink:#ff9ec4; --pink-soft:#ffe3ef; --mint:#8fe3c8; --mint-soft:#ddf8ee;
+    --sky:#9cc9ff; --sky-soft:#e3f0ff; --lav:#c4b2ff; --lav-soft:#efe9ff; --accent:#7b61ff; --good:#22b573; --bad:#ff5c7a; --warn:#ffa63d;
+    --display:"Jua","Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; min-height:100%; }
+  body { color:var(--ink); background-color:var(--bg); background-image:radial-gradient(#ffd9a0 1.6px, transparent 1.8px); background-size:24px 24px;
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif; }
+  h1, h2, h3 { font-family:var(--display); font-weight:400; margin:0; }
+  .hidden { display:none !important; }
+  button { font:inherit; color:var(--ink); cursor:pointer; background:var(--paper); border:3px solid var(--ink); border-radius:16px; padding:8px 16px; box-shadow:3px 3px 0 var(--ink); transition:transform .08s, box-shadow .08s; }
+  button:hover:not(:disabled) { transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--ink); }
+  button:active:not(:disabled) { transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  button.primary { background:var(--yellow); font-family:var(--display); font-size:19px; }
+  input, select { font:inherit; color:var(--ink); padding:11px 14px; border:3px solid var(--ink); border-radius:14px; background:#fff; outline:none; }
+  input:focus, select:focus { background:var(--yellow-soft); }
+  .card { background:var(--paper); border:3px solid var(--ink); border-radius:22px; box-shadow:4px 4px 0 var(--ink); }
+  .banner { background:var(--yellow-soft); border-bottom:3px solid var(--ink); padding:6px 16px; font-size:13px; text-align:center; }
+
+  /* 입장 */
+  #join { max-width:440px; margin:48px auto; padding:30px; }
+  #join .logo { text-align:center; font-size:46px; line-height:1; }
+  #join h1 { font-size:46px; text-align:center; margin-top:6px; }
+  #join .sub { color:var(--muted); margin:10px 0 20px; text-align:center; font-size:15px; }
+  #join .sub.err { color:var(--bad); font-weight:700; }
+  #join label { display:block; font-family:var(--display); font-size:17px; margin:14px 0 6px; }
+  #join input { width:100%; }
+  #join .joinhelp { font-size:12px; color:var(--muted); margin:8px 0 0; line-height:1.5; }
+  #join .row { display:flex; gap:12px; margin-top:24px; }
+  #join .row > * { flex:1; padding:12px; font-family:var(--display); font-size:20px; }
+
+  /* 게임 */
+  #game { max-width:900px; margin:0 auto; padding:14px 14px 28px; }
+  .topbar { display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:center; padding:10px 16px; }
+  .roombox { display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-family:var(--display); font-size:18px; }
+  .roombox button { font-size:13px; padding:4px 10px; box-shadow:2px 2px 0 var(--ink); }
+  .center { text-align:center; }
+  #phaseTxt { font-family:var(--display); font-size:22px; }
+  #timerTxt { font-family:var(--display); font-size:26px; color:var(--accent); min-height:32px; }
+  #cnt { text-align:right; font-weight:800; }
+  .panel { margin-top:14px; padding:16px; }
+  .pane { display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center; }
+  .pane h2 { font-size:28px; }
+  .pane p { margin:0; color:var(--muted); font-size:14px; }
+
+  .lobbyplayers { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+  .lp { display:flex; flex-direction:column; align-items:center; gap:4px; width:76px; font-size:13px; font-weight:800; }
+  .avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; flex:none; border:2px solid var(--ink); }
+  .setbox { background:#fffaf0; border:3px solid var(--ink); border-radius:18px; padding:12px 16px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:center; font-weight:700; }
+  .pill { display:inline-block; background:#fff; border:2px solid var(--ink); border-radius:999px; padding:2px 12px; font-weight:800; }
+  .tip { background:var(--sky-soft); border:2px solid var(--ink); border-radius:12px; padding:8px 12px; font-size:14px; color:var(--ink); max-width:520px; line-height:1.5; }
+  #startBtn { font-size:22px; padding:12px 40px; }
+
+  /* 레인 */
+  .lane { display:flex; align-items:center; gap:8px; padding:6px 4px; border-radius:14px; }
+  .lane.me { background:var(--yellow-soft); }
+  .lane .nm { width:84px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .track { position:relative; flex:1; height:30px; margin-right:34px; background:repeating-linear-gradient(90deg,#f6efe0 0 14px,#fbf6ea 14px 28px); border:2px solid var(--ink); border-radius:999px; }
+  .fill { position:absolute; left:0; top:0; bottom:0; border-radius:999px; background:var(--mint); opacity:.65; transition:width .25s; }
+  .runner { position:absolute; top:-6px; font-size:26px; line-height:1; transition:left .25s; transform:translateX(-4px); }
+  .flag { position:absolute; right:-34px; top:-4px; font-size:24px; }
+  .lane .num { width:54px; text-align:right; font-weight:800; font-size:13px; color:var(--muted); }
+  .lane.done .runner { animation:hop .5s infinite; }
+  @keyframes hop { 50% { transform:translate(-4px,-6px); } }
+
+  /* 타이핑 */
+  #typing { text-align:center; }
+  #cdBig { font-family:var(--display); font-size:84px; line-height:1; color:var(--accent); min-height:84px; }
+  #combo { font-family:var(--display); font-size:22px; color:var(--warn); min-height:30px; }
+  #combo.pop { animation:pop .25s; }
+  @keyframes pop { 50% { transform:scale(1.35); } }
+  #wordbox { font-family:"Consolas","D2Coding",ui-monospace,monospace; font-size:54px; font-weight:800; letter-spacing:2px; margin:6px 0; min-height:70px; transition:filter .2s; }
+  #wordbox .ok { color:var(--good); } #wordbox .rest { color:var(--ink); } #wordbox .bad { color:var(--bad); }
+  #wordbox.blur { filter:blur(9px); }
+  #nextbox { font-family:ui-monospace,monospace; color:var(--muted); font-size:18px; min-height:26px; }
+  #inp { width:100%; max-width:420px; font-size:26px; text-align:center; margin-top:10px; font-family:ui-monospace,monospace; }
+  #inp.bad { background:#ffe0e6; animation:shake .2s; }
+  @keyframes shake { 25% { transform:translateX(-5px); } 75% { transform:translateX(5px); } }
+  #hitBtn { margin-top:12px; background:var(--pink-soft); font-family:var(--display); font-size:18px; }
+  .hitbanner { background:var(--bad); color:#fff; border-radius:999px; padding:2px 14px; font-family:var(--display); }
+
+  /* 결과 */
+  .rank { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:14px; background:#faf7f0; margin:6px 0; text-align:left; font-weight:800; }
+  .rank.me { background:var(--yellow-soft); border:2px solid var(--ink); }
+  .rank .medal { font-size:26px; width:36px; text-align:center; }
+  .rank .rt { margin-left:auto; color:var(--accent); font-family:var(--display); }
+  #feed { font-size:14px; max-height:140px; overflow-y:auto; }
+  #feed div { margin:3px 0; } #feed .hit { color:var(--bad); font-weight:800; } #feed .fin { color:var(--good); font-weight:800; } #feed .sys { color:var(--muted); }
+  #toast { position:fixed; left:50%; bottom:28px; transform:translate(-50%,20px); background:var(--ink); color:#fff; padding:10px 18px; border-radius:999px; font-weight:800; opacity:0; pointer-events:none; transition:.25s; z-index:50; }
+  #toast.show { opacity:1; transform:translate(-50%,0); }
+  @media (max-width:640px) { .topbar { grid-template-columns:1fr; } #cnt { text-align:left; } #wordbox { font-size:38px; } }
+</style>
+</head>
+<body>
+<div id="modeBanner" class="banner hidden"></div>
+<div id="toast"></div>
+
+<!-- 1) 입장 화면 -->
+<section id="join" class="card">
+  <div class="logo">⌨️</div>
+  <h1>타자 레이스</h1>
+  <p class="sub">단어를 빨리 칠수록 내 캐릭터가 달려요! 먼저 결승선에 닿으면 승리 🏁</p>
+  <label for="nameInput">닉네임</label>
+  <input id="nameInput" maxlength="10" placeholder="예: 세훈">
+  <label for="roomInput">방 번호 (영어·숫자 2~12자)</label>
+  <input id="roomInput" maxlength="12" placeholder="예: 1234, sehun, ROOM7">
+  <p class="joinhelp">만들 때는 원하는 번호를 정하고, 들어갈 때는 친구가 알려준 번호를 넣어요.<br>비워 두고 방 만들기를 누르면 번호가 자동으로 정해져요.</p>
+  <div class="row">
+    <button id="createBtn" class="primary">방 만들기</button>
+    <button id="enterBtn">입장하기</button>
+  </div>
+</section>
+
+<!-- 2) 게임 화면 -->
+<section id="game" class="hidden">
+  <div class="topbar card">
+    <div class="roombox">🏠 방 <b id="roomCode"></b><button id="copyBtn">🔗 초대 링크</button><button id="muteBtn">🔊</button></div>
+    <div class="center"><div id="phaseTxt"></div><div id="timerTxt"></div></div>
+    <div id="cnt"></div>
+  </div>
+
+  <div id="lobby" class="card panel pane"></div>
+
+  <div id="raceBox" class="hidden">
+    <div id="lanes" class="card panel"></div>
+    <div id="typing" class="card panel hidden">
+      <div id="cdBig"></div>
+      <div id="combo"></div>
+      <div id="wordbox"></div>
+      <div id="nextbox"></div>
+      <input id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 입력!">
+      <div><button id="hitBtn">💥 방해 쓰기 (Tab) ×<span id="chg">0</span></button></div>
+    </div>
+    <div id="endBox" class="card panel hidden"></div>
+  </div>
+
+  <div id="feed" class="card panel"></div>
+</section>
+
+<script>
+// ===================== 설정 =====================
+// Supabase 대시보드 → Project Settings → API 에서 복사해서 넣기 (anon/publishable 키만! secret 키 금지)
+// 주소 뒤에 ?local=1 을 붙이면 "테스트 모드"(같은 브라우저의 탭끼리만 연결)로 동작해요.
+const SUPABASE_URL = "https://ejwoofgujgnmeixwispl.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqd29vZmd1amdubWVpeHdpc3BsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQwNDQ0NzUsImV4cCI6MjEwOTYyMDQ3NX0.P49zFX3Dk6rB0-bGJex94khJER4g517lXAhqruUbTk8";
+
+const MIN_PLAYERS = 1, MAX_PLAYERS = 8;   // 혼자서도 연습 가능
+const GOAL_OPTS = [15, 25, 40];           // 결승선까지 칠 단어 수
+const COUNTDOWN_MS = 3500, FINISH_WAIT_MS = 20000;   // 카운트다운 / 1등 뒤 마지막 사람을 기다려 주는 시간
+const HIT_MS = 3000, MAX_CHARGES = 3, COMBO_FOR_CHARGE = 5;
+
+// <PURE>
+// 단어는 코딩·AI 용어 (영어로 쳐요. 한/영 키를 영어로!)
+const WORDS = ["python","pandas","numpy","tensor","matrix","vector","loop","import","return","string","integer","float","list","tuple","dict","class","object","method","module","package","lambda","filter","sorted","range","print","input","while","break","continue","except","assert","global","slice","index","append","remove","update","model","train","epoch","batch","weight","bias","layer","neuron","sigmoid","relu","softmax","loss","gradient","dataset","feature","label","target","predict","accuracy","recall","precision","overfit","github","commit","branch","merge","deploy","server","client","token","prompt","agent","vision","sensor","wafer","defect","python3","function","variable","boolean","compile","debug","cache","queue","stack","array","search","scale","plot","chart","random","clean"];
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function pickWords(n) { return shuffle([...new Set(WORDS)]).slice(0, n); }
+// 순위: 완주한 사람은 기록(ms) 짧은 순, 못 끝낸 사람은 진행 단어 수 많은 순
+function computeFinal(players, prog, times, goal) {
+  const rows = players.map((id) => ({ id, n: prog[id] || 0, ms: (prog[id] || 0) >= goal ? (times[id] || 0) : 0 }));
+  const fin = rows.filter((r) => r.n >= goal).sort((a, b) => a.ms - b.ms);
+  const rest = rows.filter((r) => r.n < goal).sort((a, b) => b.n - a.n);
+  return [...fin, ...rest];
+}
+// </PURE>
+
+// ===================== 기본 변수 =====================
+const $ = (id) => document.getElementById(id);
+const myId = Math.random().toString(36).slice(2, 10);
+let joinedAt = Date.now(), myName = "", roomCode = "";
+let net = null, present = {}, settled = false;
+let G = { phase: "lobby", gid: 0, goal: 25, words: [], players: [], names: {}, cd: 0, final: null };
+let prog = {}, times = {};
+let myN = 0, combo = 0, charges = 0, done = false, errFlag = false, hitUntil = 0;
+let seenGid = -1, seenKey = "", raceStartAt = 0, cdEnd = 0, hostRaceAt = 0, hostFirst = 0, doneMs = 0;
+let muted = false;
+
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const norm = (t) => String(t).replace(/\s+/g, "").toLowerCase();
+const AV_EMOJI = ["🐶", "🐱", "🐰", "🐻", "🐼", "🦊", "🐸", "🐯", "🐨", "🐹", "🐷", "🐵", "🐥", "🦁", "🐮", "🐙"];
+const AV_BG = ["#ffe3ef", "#fff4c2", "#ddf8ee", "#e3f0ff", "#efe9ff", "#ffe8d6"];
+function hashId(id) { let h = 7; for (const c of String(id)) h = (h * 131 + c.charCodeAt(0)) >>> 0; return h; }
+const emojiOf = (id) => AV_EMOJI[(hashId(id) >>> 3) % AV_EMOJI.length];
+const avatar = (id) => `<span class="avatar" style="background:${AV_BG[hashId(id) % AV_BG.length]}">${emojiOf(id)}</span>`;
+const nameOf = (id) => (G.names && G.names[id]) || (present[id] && present[id].name) || "?";
+function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove("show"), 2000); }
+const fmt = (ms) => (ms / 1000).toFixed(1) + "초";
+
+// 효과음 (브라우저 기본 소리만 써요)
+let actx = null;
+function beep(f, d = 0.08, type = "square", v = 0.05) {
+  if (muted) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = f; g.gain.value = v; o.connect(g); g.connect(actx.destination);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + d); o.stop(actx.currentTime + d);
+  } catch (e) {}
+}
+const jingle = () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, 0.14, "triangle", 0.07), i * 110));
+$("muteBtn").onclick = () => { muted = !muted; $("muteBtn").textContent = muted ? "🔇" : "🔊"; };
+
+// ===================== 통신 (Supabase 또는 테스트 모드) =====================
+function makeSupabaseNet(room) {
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const ch = client.channel("typing-" + room, { config: { broadcast: { self: false }, presence: { key: myId } } });
+  const api = { msgFn: null, presFn: null };
+  ch.on("broadcast", { event: "m" }, ({ payload }) => api.msgFn && api.msgFn(payload));
+  ch.on("presence", { event: "sync" }, () => {
+    const st = ch.presenceState(), list = {};
+    for (const id in st) { const p = st[id][st[id].length - 1]; if (p) list[id] = { name: p.name, joinedAt: p.joinedAt }; }
+    api.presFn && api.presFn(list);
+  });
+  ch.subscribe(async (status) => {
+    if (status === "SUBSCRIBED") { await ch.track({ name: myName, joinedAt }); api.ready && api.ready(); }
+    if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") feed("서버 연결 문제가 생겼어요. 새로고침해 보세요.", "sys");
+  });
+  api.send = (msg) => { if (!api.closed) ch.send({ type: "broadcast", event: "m", payload: msg }); };
+  api.leave = () => { api.closed = true; api.msgFn = api.presFn = api.ready = null; ch.untrack().catch(() => {}); client.removeChannel(ch); };
+  return api;
+}
+function makeLocalNet(room) {
+  const bc = new BroadcastChannel("typing-" + room);
+  const api = { msgFn: null, presFn: null }, seen = {};
+  const me = () => ({ id: myId, name: myName, joinedAt });
+  const emitPres = () => {
+    const now = Date.now(), list = { [myId]: { name: myName, joinedAt } };
+    for (const id in seen) if (now - seen[id].t < 5000) list[id] = seen[id].p; else delete seen[id];
+    api.presFn && api.presFn(list);
+  };
+  bc.onmessage = (e) => {
+    const m = e.data;
+    if (m.__ping) { const isNew = !seen[m.p.id]; seen[m.p.id] = { p: { name: m.p.name, joinedAt: m.p.joinedAt }, t: Date.now() }; if (isNew) { bc.postMessage({ __ping: 1, p: me() }); emitPres(); } return; }
+    if (m.__bye) { delete seen[m.id]; emitPres(); return; }
+    api.msgFn && api.msgFn(m);
+  };
+  const iv = setInterval(() => { bc.postMessage({ __ping: 1, p: me() }); emitPres(); }, 1500);
+  const bye = () => bc.postMessage({ __bye: 1, id: myId });
+  addEventListener("beforeunload", bye);
+  setTimeout(() => { if (api.closed) return; bc.postMessage({ __ping: 1, p: me() }); emitPres(); api.ready && api.ready(); }, 50);
+  api.send = (msg) => { if (!api.closed) bc.postMessage(msg); };
+  api.leave = () => { api.closed = true; api.msgFn = api.presFn = api.ready = null; clearInterval(iv); bye(); removeEventListener("beforeunload", bye); bc.close(); };
+  return api;
+}
+// emit = 모두에게 보내고 나도 처리
+function emit(msg) { if (!net) return; net.send(msg); handle(msg); }
+
+// ===================== 입장 =====================
+const params = new URLSearchParams(location.search);
+const useSupabase = !!(SUPABASE_URL && SUPABASE_KEY) && !params.get("local");
+if (!useSupabase) { $("modeBanner").textContent = "🧪 테스트 모드: 같은 브라우저의 탭끼리만 연결돼요"; $("modeBanner").classList.remove("hidden"); }
+if (params.get("room")) $("roomInput").value = params.get("room");
+try { $("nameInput").value = localStorage.getItem("typingName") || ""; } catch (e) {}
+
+function alertBox(t) { const p = $("join").querySelector(".sub"); p.textContent = "⚠️ " + t; p.classList.add("err"); }
+function enter(code, mode) {
+  myName = $("nameInput").value.trim();
+  if (!myName) { alertBox("닉네임을 입력해 주세요"); return; }
+  code = code.trim().toUpperCase();
+  if (!code && mode === "create") code = Array.from({ length: 4 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 32)]).join("");
+  if (!/^[A-Z0-9]{2,12}$/.test(code)) { alertBox("방 번호는 영어나 숫자로 2~12자예요 (띄어쓰기·특수문자 X)"); return; }
+  joinedAt = Date.now();
+  try { localStorage.setItem("typingName", myName); } catch (e) {}
+  roomCode = code;
+  history.replaceState(null, "", "?room=" + code + (params.get("local") ? "&local=1" : ""));
+  $("modeBanner").classList.add("hidden");
+  $("join").classList.add("hidden"); $("game").classList.remove("hidden");
+  $("roomCode").textContent = code;
+  net = useSupabase ? makeSupabaseNet(code) : makeLocalNet(code);
+  net.msgFn = handle; net.presFn = onPresence;
+  net.ready = () => {
+    setTimeout(() => {
+      const ids = presentIds();
+      const dup = ids.find((id) => id !== myId && norm(present[id].name) === norm(myName) &&
+        (present[id].joinedAt < joinedAt || (present[id].joinedAt === joinedAt && id < myId)));
+      if (dup) { leaveRoom(`'${myName}' 닉네임은 이 방에 이미 있어요. 다른 닉네임으로 들어와 주세요.`); return; }
+      if (ids.indexOf(myId) >= MAX_PLAYERS) { leaveRoom(`방이 가득 찼어요 (최대 ${MAX_PLAYERS}명).`); return; }
+      if (mode === "create" && ids.length > 1 && ids[0] !== myId) { leaveRoom(`'${code}' 방은 이미 누가 쓰고 있어요. 다른 번호로 만들거나 '입장하기'를 눌러 주세요.`); return; }
+      settled = true; onPresence(present);
+      net.send({ t: "hello", from: myId });
+      feed(mode === "create" ? `'${code}' 방을 만들었어요. 친구에게 방 번호나 초대 링크를 알려 주세요!` : `'${code}' 방에 들어왔어요.`, "sys");
+    }, 2000);
+  };
+  render();
+}
+function leaveRoom(msg) {
+  if (net && net.leave) net.leave();
+  net = null; present = {}; settled = false; seenGid = -1; seenKey = "";
+  G = { phase: "lobby", gid: 0, goal: 25, words: [], players: [], names: {}, cd: 0, final: null };
+  $("feed").innerHTML = "";
+  $("game").classList.add("hidden"); $("join").classList.remove("hidden");
+  history.replaceState(null, "", location.pathname);
+  alertBox(msg);
+}
+$("createBtn").onclick = () => enter($("roomInput").value, "create");
+$("enterBtn").onclick = () => enter($("roomInput").value, "join");
+$("roomInput").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.isComposing) enter($("roomInput").value, "join"); });
+$("copyBtn").onclick = async () => {
+  const url = location.origin + location.pathname + "?room=" + roomCode;
+  try { await navigator.clipboard.writeText(url); toast("초대 링크 복사 완료!"); } catch (e) { feed("이 링크를 친구에게 보내 주세요: " + url, "sys"); }
+};
+function feed(t, cls) {
+  const d = document.createElement("div"); d.className = cls || ""; d.textContent = t;
+  $("feed").appendChild(d); $("feed").scrollTop = $("feed").scrollHeight;
+  while ($("feed").children.length > 40) $("feed").firstChild.remove();
+}
+
+// ===================== 접속자 / 방장 =====================
+function presentIds() { return Object.keys(present).sort((a, b) => present[a].joinedAt - present[b].joinedAt || (a < b ? -1 : 1)); }
+const isHost = () => settled && presentIds()[0] === myId;
+function onPresence(list) {
+  const prev = present; present = list;
+  for (const id in prev) if (!present[id] && settled) feed(`${prev[id].name}님이 나갔어요.`, "sys");
+  for (const id in present) if (!prev[id] && id !== myId && settled) feed(`${present[id].name}님이 들어왔어요.`, "sys");
+  render();
+}
+function pushState() { if (isHost()) emit({ t: "state", G: JSON.parse(JSON.stringify(G)) }); }
+
+// ===================== 방장: 게임 진행 =====================
+function startRace() {
+  if (!isHost() || (G.phase !== "lobby" && G.phase !== "end")) return;
+  const ids = presentIds().slice(0, MAX_PLAYERS);
+  if (ids.length < MIN_PLAYERS) return;
+  const names = {}; ids.forEach((id) => (names[id] = present[id].name));
+  G = { ...G, phase: "count", gid: G.gid + 1, words: pickWords(G.goal), players: ids, names, cd: COUNTDOWN_MS, final: null };
+  hostRaceAt = Date.now() + COUNTDOWN_MS; hostFirst = 0;
+  pushState();
+}
+setInterval(() => {   // 방장이 0.4초마다 진행 체크
+  if (!isHost()) return;
+  const now = Date.now();
+  if (G.phase === "count") {
+    if (!hostRaceAt) hostRaceAt = now + 1500;   // 방장이 바뀐 경우
+    if (now >= hostRaceAt) { G.phase = "race"; G.cd = 0; hostRaceAt = 0; pushState(); }
+  } else if (G.phase === "race") {
+    const alive = G.players.filter((id) => present[id]);
+    const finished = alive.filter((id) => (prog[id] || 0) >= G.goal);
+    if (finished.length && !hostFirst) hostFirst = now;
+    if (!alive.length || finished.length === alive.length || (hostFirst && now - hostFirst > FINISH_WAIT_MS)) {
+      G.phase = "end"; G.final = computeFinal(G.players, prog, times, G.goal); hostFirst = 0; pushState();
+    }
+  }
+}, 400);
+
+// ===================== 메시지 처리 =====================
+function handle(m) {
+  switch (m.t) {
+    case "hello": if (isHost()) pushState(); break;
+    case "state": {
+      G = m.G;
+      if (G.gid !== seenGid) { seenGid = G.gid; prog = {}; times = {}; myN = 0; combo = 0; charges = 0; done = false; errFlag = false; hitUntil = 0; doneMs = 0; }
+      const key = G.gid + ":" + G.phase;
+      if (key !== seenKey) {
+        seenKey = key;
+        if (G.phase === "count") { cdEnd = Date.now() + G.cd; $("inp").value = ""; feed("🏁 곧 시작해요! 한/영 키를 영어로 바꿔 주세요", "sys"); }
+        if (G.phase === "race") { raceStartAt = Date.now(); $("inp").value = ""; beep(880, 0.2, "triangle", 0.08); setTimeout(() => $("inp").focus(), 30); }
+        if (G.phase === "end") jingle();
+      }
+      render();
+      break;
+    }
+    case "settings":
+      if (isHost() && G.phase === "lobby" && GOAL_OPTS.includes(m.goal)) { G.goal = m.goal; pushState(); }
+      break;
+    case "prog":
+      if (m.g !== G.gid) break;
+      prog[m.id] = m.n;
+      if (m.n >= G.goal && !times[m.id]) { times[m.id] = m.ms; feed(`🏁 ${nameOf(m.id)} 완주! ${fmt(m.ms)}`, "fin"); }
+      renderLanes();
+      break;
+    case "hit":
+      if (m.g !== G.gid) break;
+      feed(`💥 ${nameOf(m.from)} → ${nameOf(m.to)} 방해!`, "hit");
+      if (m.to === myId) { hitUntil = Date.now() + HIT_MS; toast("💥 방해당했다! 단어가 흐려져요"); beep(120, 0.3, "sawtooth", 0.08); }
+      break;
+    case "lobby": if (isHost() && G.phase === "end") { G.phase = "lobby"; G.final = null; pushState(); } break;
+  }
+}
+
+// ===================== 타이핑 =====================
+const inp = $("inp");
+const canType = () => G.phase === "race" && G.players.includes(myId) && !done;
+function renderWord() {
+  const w = G.words[myN]; if (w == null) return;
+  const v = inp.value.trim().toLowerCase();
+  let ok = 0; while (ok < v.length && ok < w.length && v[ok] === w[ok]) ok++;
+  const bad = v.length > ok;
+  $("wordbox").innerHTML = `<span class="ok">${esc(w.slice(0, ok))}</span><span class="${bad ? "bad" : "rest"}">${esc(w.slice(ok))}</span>`;
+  $("nextbox").textContent = G.words.slice(myN + 1, myN + 4).join("   ");
+  $("combo").textContent = combo >= 2 ? `🔥 콤보 x${combo}` : "";
+  $("chg").textContent = charges;
+  $("hitBtn").disabled = charges <= 0;
+}
+inp.addEventListener("input", () => {
+  if (!canType()) { inp.value = ""; return; }
+  const v = inp.value.trim().toLowerCase(), w = G.words[myN];
+  if (!w.startsWith(v)) {
+    if (!errFlag) { errFlag = true; combo = 0; beep(150, 0.15, "sawtooth", 0.07); }
+    inp.classList.add("bad"); setTimeout(() => inp.classList.remove("bad"), 200);
+  }
+  if (v === w) correct();
+  renderWord();
+});
+inp.addEventListener("keydown", (e) => { if (e.key === "Tab") { e.preventDefault(); useHit(); } });
+document.addEventListener("click", () => { if (canType()) inp.focus(); });
+function correct() {
+  myN++; combo++; errFlag = false; inp.value = "";
+  beep(440 * Math.pow(1.06, Math.min(combo, 14)), 0.07, "square", 0.05);
+  if (combo % COMBO_FOR_CHARGE === 0 && charges < MAX_CHARGES) {
+    charges++; toast("💥 방해 아이템 획득! (Tab)");
+    $("combo").classList.remove("pop"); void $("combo").offsetWidth; $("combo").classList.add("pop"); beep(988, 0.12, "triangle", 0.08);
+  }
+  let ms = 0;
+  if (myN >= G.goal) { done = true; ms = doneMs = Date.now() - raceStartAt; jingle(); }
+  emit({ t: "prog", id: myId, n: myN, g: G.gid, ms });
+  render();
+}
+function useHit() {
+  if (!canType() || charges <= 0) return;
+  // 나 말고 가장 앞서 있는 사람(아직 완주 안 한)을 노려요
+  const cand = G.players.filter((id) => id !== myId && present[id] && (prog[id] || 0) < G.goal).sort((a, b) => (prog[b] || 0) - (prog[a] || 0));
+  if (!cand.length) { toast("방해할 상대가 없어요"); return; }
+  charges--; beep(300, 0.12, "triangle", 0.08);
+  emit({ t: "hit", from: myId, to: cand[0], g: G.gid });
+  renderWord();
+}
+$("hitBtn").onclick = () => { useHit(); if (canType()) inp.focus(); };
+
+// ===================== 화면 그리기 =====================
+const PH = { lobby: "🎮 대기실", count: "⏳ 준비!", race: "🏃 달려라!", end: "🏁 결과" };
+function render() {
+  if (!net) return;
+  const ids = presentIds(), host = isHost();
+  $("cnt").textContent = `👥 ${ids.length}/${MAX_PLAYERS}`;
+  $("phaseTxt").textContent = PH[G.phase] || "";
+  const inLobby = G.phase === "lobby";
+  $("lobby").classList.toggle("hidden", !inLobby);
+  $("raceBox").classList.toggle("hidden", inLobby);
+  if (inLobby) renderLobby(ids, host);
+  else {
+    renderLanes();
+    const racing = G.phase === "count" || G.phase === "race";
+    const me = G.players.includes(myId);
+    $("typing").classList.toggle("hidden", !(racing && me && !done));
+    $("endBox").classList.toggle("hidden", G.phase !== "end");
+    if (G.phase === "end") renderEnd(host);
+    if (racing && me && !done) {
+      $("wordbox").style.visibility = G.phase === "race" ? "visible" : "hidden";
+      inp.disabled = G.phase !== "race";
+      renderWord();
+    }
+  }
+}
+function renderLobby(ids, host) {
+  const html = `<h2>⌨️ 타자 레이스</h2>
+    <p>${host ? `참가자 ${MIN_PLAYERS}명 이상이면 시작할 수 있어요 (최대 ${MAX_PLAYERS}명)` : "방장(👑)이 시작하길 기다리는 중..."}</p>
+    <div class="lobbyplayers">${ids.map((id, i) => `<div class="lp">${avatar(id)}<span>${esc(present[id].name)}${i === 0 ? " 👑" : ""}${id === myId ? " (나)" : ""}</span></div>`).join("")}</div>
+    <div class="tip">단어는 코딩·AI 용어(영어)예요. <b>한/영 키를 영어로</b> 바꿔 주세요!<br>5콤보마다 💥 방해 아이템 1개 → <b>Tab</b>을 누르면 1등의 단어가 3초 동안 흐려져요. 틀리면 콤보가 끊겨요.</div>
+    <div class="setbox">${host
+      ? `결승선까지 <select id="setGoal">${GOAL_OPTS.map((n) => `<option value="${n}" ${n === G.goal ? "selected" : ""}>${n}단어</option>`).join("")}</select>`
+      : `결승선까지 <span class="pill">${G.goal}단어</span> <span style="color:var(--muted);font-weight:400">(방장이 정해요)</span>`}</div>
+    ${host ? `<button id="startBtn" class="primary" ${ids.length < MIN_PLAYERS ? "disabled" : ""}>달리기 시작! 🚀</button>` : ""}`;
+  const lob = $("lobby");
+  if (lob._h === html) return;
+  lob._h = html; lob.innerHTML = html;
+  if (host) {
+    $("setGoal").onchange = () => emit({ t: "settings", goal: +$("setGoal").value });
+    $("startBtn").onclick = startRace;
+  }
+}
+function renderLanes() {
+  if (G.phase === "lobby") return;
+  const rows = G.players.map((id) => {
+    const n = prog[id] || 0, pct = Math.min(100, (n / G.goal) * 100), fin = n >= G.goal;
+    return `<div class="lane ${id === myId ? "me" : ""} ${fin ? "done" : ""}">${avatar(id)}<span class="nm">${esc(nameOf(id))}</span>
+      <div class="track"><div class="fill" style="width:${pct}%"></div><div class="runner" style="left:${pct}%">${emojiOf(id)}</div><span class="flag">🏁</span></div>
+      <span class="num">${fin && times[id] ? fmt(times[id]) : n + "/" + G.goal}</span></div>`;
+  }).join("");
+  const el = $("lanes"); if (el._h !== rows) { el._h = rows; el.innerHTML = rows; }
+}
+function renderEnd(host) {
+  const medals = ["🥇", "🥈", "🥉"];
+  const rows = (G.final || []).map((r, i) => `<div class="rank ${r.id === myId ? "me" : ""}"><span class="medal">${medals[i] || i + 1}</span>${avatar(r.id)}<span>${esc(nameOf(r.id))}</span>
+    <span class="rt">${r.n >= G.goal ? fmt(r.ms) : `미완주 ${r.n}/${G.goal}`}</span></div>`).join("");
+  const html = `<h2 style="text-align:center">🏆 결과</h2>${rows}
+    <div style="text-align:center;margin-top:14px">${host ? '<button id="againBtn" class="primary">🔁 한 판 더!</button> <button id="lobbyBtn">대기실로</button>' : "<p style='color:var(--muted)'>방장이 다음 판을 정할 거예요</p>"}</div>`;
+  const el = $("endBox"); if (el._h === html) return;
+  el._h = html; el.innerHTML = html;
+  if (host) { $("againBtn").onclick = startRace; $("lobbyBtn").onclick = () => emit({ t: "lobby" }); }
+}
+
+// 타이머 + 방해 효과 해제
+setInterval(() => {
+  const now = Date.now();
+  if (G.phase === "count") {
+    const left = Math.ceil((cdEnd - now) / 1000);
+    $("cdBig").textContent = left > 0 ? left : "GO!"; $("timerTxt").textContent = "";
+  } else if (G.phase === "race") {
+    $("cdBig").textContent = "";
+    $("timerTxt").textContent = fmt(done ? doneMs : now - raceStartAt);
+  } else { $("cdBig").textContent = ""; $("timerTxt").textContent = ""; }
+  $("wordbox").classList.toggle("blur", now < hitUntil);
+}, 100);
+</script>
+</body>
+</html>
