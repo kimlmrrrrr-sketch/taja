@@ -12,7 +12,7 @@
 <style>
   :root { --ink:#3b3355; --muted:#8b84a3; --paper:#fff; --bg:#fff6dc; --line:#ece4d3;
     --yellow:#ffd84d; --yellow-soft:#fff4c2; --pink:#ff9ec4; --pink-soft:#ffe3ef; --mint:#8fe3c8; --mint-soft:#ddf8ee;
-    --sky:#9cc9ff; --sky-soft:#e3f0ff; --lav:#c4b2ff; --lav-soft:#efe9ff; --accent:#7b61ff; --good:#22b573; --bad:#ff5c7a; --warn:#ffa63d;
+    --sky:#9cc9ff; --sky-soft:#e3f0ff; --lav:#c4b2ff; --lav-soft:#efe9ff; --accent:#7b61ff; --good:#22b573; --bad:#ff5c7a; --warn:#ffa63d; --gold:#e0a500;
     --display:"Jua","Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif; }
   * { box-sizing:border-box; }
   html, body { margin:0; min-height:100%; }
@@ -43,6 +43,7 @@
   #join .joinhelp { font-size:12px; color:var(--muted); margin:8px 0 0; line-height:1.5; }
   #join .row { display:flex; gap:12px; margin-top:24px; }
   #join .row > * { flex:1; padding:12px; font-family:var(--display); font-size:20px; }
+  .watchbtn { width:100%; margin-top:12px; font-size:15px; background:var(--sky-soft); }
 
   /* 게임 */
   #game { max-width:900px; margin:0 auto; padding:14px 14px 28px; }
@@ -63,24 +64,30 @@
   .avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; flex:none; border:2px solid var(--ink); }
   .setbox { background:#fffaf0; border:3px solid var(--ink); border-radius:18px; padding:12px 16px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:center; font-weight:700; }
   .pill { display:inline-block; background:#fff; border:2px solid var(--ink); border-radius:999px; padding:2px 12px; font-weight:800; }
-  .tip { background:var(--sky-soft); border:2px solid var(--ink); border-radius:12px; padding:8px 12px; font-size:14px; color:var(--ink); max-width:560px; line-height:1.5; }
+  .tip { background:var(--sky-soft); border:2px solid var(--ink); border-radius:12px; padding:8px 12px; font-size:14px; color:var(--ink); max-width:580px; line-height:1.5; }
+  .specline { font-size:14px; color:var(--muted); }
+  .togglebtn { font-size:14px; padding:6px 14px; background:var(--sky-soft); }
+  .specbadge { display:inline-block; font-family:var(--display); background:var(--sky); border:2px solid var(--ink); border-radius:999px; padding:1px 10px; font-size:14px; }
   #startBtn { font-size:22px; padding:12px 40px; }
 
   /* 장르 선택 */
-  .genres { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; width:100%; }
+  .genres { display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); gap:10px; width:100%; }
   .gbtn { display:flex; flex-direction:column; align-items:center; gap:2px; padding:10px 8px; text-align:center; background:#fff; }
   .gbtn .ge { font-size:30px; line-height:1.1; } .gbtn b { font-family:var(--display); font-weight:400; font-size:17px; } .gbtn small { color:var(--muted); font-size:12px; line-height:1.3; }
   .gbtn.on { background:var(--yellow); }
   .gbtn.on small { color:var(--ink); }
   .gbtn:disabled.on { opacity:1; }
-  .customwrap { width:100%; max-width:560px; }
+  .customwrap { width:100%; max-width:580px; }
   .customwrap textarea { width:100%; min-height:110px; resize:vertical; font-size:16px; }
   .customwrap .cnt { font-size:13px; color:var(--muted); text-align:right; margin-top:4px; }
 
   /* 레인 */
+  #cdBig { text-align:center; font-family:var(--display); font-size:84px; line-height:1; color:var(--accent); margin-top:14px; animation:cdpop .5s; }
+  #cdBig:empty { display:none; }
+  @keyframes cdpop { from { transform:scale(1.6); opacity:.2; } }
   .lane { display:flex; align-items:center; gap:8px; padding:6px 4px; border-radius:14px; }
   .lane.me { background:var(--yellow-soft); }
-  .lane .nm { width:84px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lane .nm { width:92px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .track { position:relative; flex:1; height:30px; margin-right:34px; background:repeating-linear-gradient(90deg,#f6efe0 0 14px,#fbf6ea 14px 28px); border:2px solid var(--ink); border-radius:999px; }
   .fill { position:absolute; left:0; top:0; bottom:0; border-radius:999px; background:var(--mint); opacity:.65; transition:width .25s; }
   .runner { position:absolute; top:-6px; font-size:26px; line-height:1; transition:left .25s; transform:translateX(-4px); }
@@ -91,7 +98,6 @@
 
   /* 타이핑 */
   #typing { text-align:center; }
-  #cdBig { font-family:var(--display); font-size:84px; line-height:1; color:var(--accent); min-height:84px; }
   #combo { font-family:var(--display); font-size:22px; color:var(--warn); min-height:30px; }
   #combo.pop { animation:pop .25s; }
   @keyframes pop { 50% { transform:scale(1.35); } }
@@ -99,9 +105,10 @@
   #wordbox { font-family:var(--display); font-size:58px; font-weight:400; letter-spacing:3px; margin:6px 0; min-height:70px; transition:filter .2s; word-break:keep-all; line-height:1.3; }
   #wordbox[data-sz="1"] { font-size:46px; } #wordbox[data-sz="2"] { font-size:32px; letter-spacing:1px; } #wordbox[data-sz="3"] { font-size:25px; letter-spacing:0; }
   #wordbox .ok { color:var(--good); } #wordbox .rest { color:var(--ink); } #wordbox .bad { color:var(--bad); }
+  #wordbox.gold .rest { color:var(--gold); } #wordbox.gold::before { content:"⭐ "; font-size:.6em; }
   #wordbox.blur { filter:blur(9px); }
   #nextbox { font-family:var(--display); color:var(--muted); font-size:18px; min-height:26px; }
-  #inp { width:100%; max-width:560px; font-size:24px; text-align:center; margin-top:10px; }
+  #inp { width:100%; max-width:580px; font-size:24px; text-align:center; margin-top:10px; }
   .hint { color:var(--muted); font-size:13px; margin-top:6px; }
   #inp.bad { background:#ffe0e6; animation:shake .2s; }
   @keyframes shake { 25% { transform:translateX(-5px); } 75% { transform:translateX(5px); } }
@@ -113,8 +120,11 @@
   .rank .medal { font-size:26px; width:36px; text-align:center; }
   .rank .rt { margin-left:auto; text-align:right; color:var(--accent); font-family:var(--display); line-height:1.3; }
   .rank .rt small { display:block; color:var(--muted); font-family:"Pretendard",sans-serif; font-size:12px; font-weight:700; }
+  .awards { flex-basis:100%; display:flex; gap:6px; flex-wrap:wrap; padding-left:46px; }
+  .award { background:var(--pink-soft); border:2px solid var(--ink); border-radius:999px; font-size:12px; padding:0 8px; font-weight:800; }
+  .pbline { text-align:center; margin-top:8px; font-size:14px; color:var(--accent); font-weight:800; }
   #chatlog { font-size:14px; height:150px; overflow-y:auto; padding-right:4px; }
-  #chatlog div { margin:3px 0; word-break:break-all; } #chatlog .hit { color:var(--bad); font-weight:800; } #chatlog .fin { color:var(--good); font-weight:800; } #chatlog .lead { color:var(--warn); font-weight:800; } #chatlog .sys { color:var(--muted); }
+  #chatlog div { margin:3px 0; word-break:break-all; } #chatlog .hit { color:var(--bad); font-weight:800; } #chatlog .fin { color:var(--good); font-weight:800; } #chatlog .lead { color:var(--warn); font-weight:800; } #chatlog .gold { color:var(--gold); font-weight:800; } #chatlog .sys { color:var(--muted); }
   #chatForm { display:flex; gap:8px; margin-top:10px; }
   #chatForm input { flex:1; min-width:0; padding:8px 12px; }
   #chatForm button { padding:6px 14px; }
@@ -143,6 +153,7 @@
     <button id="createBtn" class="primary">방 만들기</button>
     <button id="enterBtn">입장하기</button>
   </div>
+  <button id="watchBtn" class="watchbtn">👀 보기만 할래요 (관전으로 입장)</button>
 </section>
 
 <!-- 2) 게임 화면 -->
@@ -156,16 +167,16 @@
   <div id="lobby" class="card panel pane"></div>
 
   <div id="raceBox" class="hidden">
+    <div id="cdBig"></div>
     <div id="lanes" class="card panel"></div>
     <div id="typing" class="card panel hidden">
-      <div id="cdBig"></div>
       <div id="combo"></div>
       <div id="stat"></div>
       <div id="wordbox"></div>
       <div id="nextbox"></div>
       <input id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 입력!">
       <div class="hint" id="hint"></div>
-      <div><button id="hitBtn">💥 방해 쓰기 (Tab) ×<span id="chg">0</span></button></div>
+      <div><button id="hitBtn"></button></div>
     </div>
     <div id="endBox" class="card panel hidden"></div>
   </div>
@@ -183,50 +194,37 @@
 const SUPABASE_URL = "https://ejwoofgujgnmeixwispl.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqd29vZmd1amdubWVpeHdpc3BsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQwNDQ0NzUsImV4cCI6MjEwOTYyMDQ3NX0.P49zFX3Dk6rB0-bGJex94khJER4g517lXAhqruUbTk8";
 
-const MIN_PLAYERS = 1, MAX_PLAYERS = 8;   // 혼자서도 연습 가능
+const MIN_PLAYERS = 1, MAX_PLAYERS = 8;   // 참가자 수 (관전은 따로, 인원 제한 없이 들어와요)
 const COUNTDOWN_MS = 3500, FINISH_WAIT_MS = 20000;   // 카운트다운 / 1등 뒤 마지막 사람을 기다려 주는 시간
-const HIT_MS = 3000, MAX_CHARGES = 3, COMBO_FOR_CHARGE = 5;
+const HIT_MS = 3000, MAX_BAG = 3, COMBO_FOR_ITEM = 5;   // 흐리기 시간 / 아이템 보관 수 / 몇 콤보마다 아이템
+const GOLD_RATE_WORD = 0.12, GOLD_RATE_LINE = 0.2;      // ⭐ 황금 글감이 나올 확률
 const CUSTOM_MAX_LINES = 20, CUSTOM_LINE_LEN = 40, CUSTOM_MAX_ITEMS = 30;
 
 // <PURE>
 // ===================== 글감 =====================
-// 한글 낱말: 쌍자음(ㄲㄸㅃㅆㅉ)·ㅒㅖ·겹받침 같은 어려운 글자는 뺐어요.
-const KO_WORDS = ["라면","치킨","햄버거","김밥","만두","비빔밥","불고기","냉면","우동","초밥","피자","과자","아이스크림","초콜릿","사과","바나나","포도","수박","참외","복숭아","토마토","오이","고구마","감자","양파","마늘","두부","삼겹살",
-  "강아지","고양이","호랑이","하이에나","기린","사슴","거북이","다람쥐","펭귄","문어","고래","상어","독수리","앵무새","원숭이","너구리","도마뱀","하마","사자","곰돌이","햄스터","오리","병아리","나비","잠자리","개구리","달팽이",
-  "노트북","키보드","마우스","모니터","스마트폰","이어폰","충전기","자동차","자전거","지하철","버스","비행기","편의점","도서관","놀이공원","수영장","운동장","체육관","주말","월요일","점심시간","퇴근길","커피","우산","무지개","눈사람","소풍","여행","노래방","영화관","축구","농구","야구","배드민턴","달리기","줄넘기",
-  "하늘","구름","바다","바람","나무","산","강물","호수","햇살","별빛","달빛","노을","소나기","안개","번개","단풍","낙엽","시냇물","폭포","숲속","들판","언덕","모래","파도","은하수",
-  "학교","선생님","친구","가족","어머니","아버지","할머니","할아버지","동생","이웃","교실","운동회","방학","시험","숙제","칠판","공책","연필","지우개","가방","도시락","졸업식",
-  "행복","사랑","우정","희망","용기","웃음","눈물","즐거움","추억","약속","비밀","소원","선물","생일","축하","고마움","미안해","보고싶다",
-  "냉장고","세탁기","청소기","텔레비전","달력","거울","베개","이불","침대","책상","의자","창문","현관","부엌","욕실","주전자","숟가락","젓가락","접시","우유","주스","아침밥","저녁밥","간식",
-  "산책","등산","물고기","캠핑","노래","춤","그림","독서","요리","청소","휴가",
-  "대한민국","서울","부산","제주도","한강","독도","한글","세종대왕","태극기","무궁화","설날","추석","한복","김장","보름달"];
+// 한글 낱말: 쌍자음(ㄲㄸㅃㅆㅉ)·ㅒㅖ·겹받침 같은 어려운 글자는 빼고 골랐어요.
+const KO_WORDS = ["라면", "치킨", "햄버거", "김밥", "만두", "비빔밥", "불고기", "냉면", "우동", "초밥", "피자", "과자", "아이스크림", "초콜릿", "사과", "바나나", "포도", "수박", "참외", "복숭아", "토마토", "오이", "고구마", "감자", "양파", "마늘", "두부", "삼겹살", "갈비", "순두부", "김치", "잡채", "전골", "곰탕", "설렁탕", "칼국수", "수제비", "탕수육", "만두국", "오므라이스", "돈가스", "스파게티", "샌드위치", "팬케이크", "와플", "도넛", "마카롱", "쿠키", "케이크", "푸딩", "요거트", "샐러드", "스테이크", "소시지", "달걀", "참치", "연어", "오징어", "새우", "조개", "미역국", "시금치", "당근", "브로콜리", "옥수수", "호박", "가지", "버섯", "상추", "배추", "파인애플", "블루베리", "키위", "망고", "체리", "자두", "귤", "오렌지", "레몬", "아보카도", "코코넛", "호두", "아몬드", "설탕", "소금", "식초", "간장", "참기름", "고추장", "된장", "고춧가루", "젤리", "사탕", "바닐라", "강아지", "고양이", "호랑이", "하이에나", "기린", "사슴", "거북이", "다람쥐", "펭귄", "문어", "고래", "상어", "독수리", "앵무새", "원숭이", "너구리", "도마뱀", "하마", "사자", "곰돌이", "햄스터", "오리", "병아리", "나비", "잠자리", "개구리", "달팽이", "코알라", "판다", "캥거루", "치타", "표범", "늑대", "여우", "돼지", "염소", "당나귀", "낙타", "얼룩말", "악어", "거미", "개미", "나방", "매미", "반딧불", "비둘기", "참새", "제비", "부엉이", "공작", "타조", "갈매기", "백조", "돌고래", "해마", "불가사리", "해파리", "가재", "낙지", "전복", "고슴도치", "청설모", "두더지", "박쥐", "수달", "비버", "라마", "알파카", "오랑우탄", "고릴라", "침팬지", "사마귀", "무당벌레", "지렁이", "올챙이", "도롱뇽", "카멜레온", "이구아나", "공룡", "유니콘", "인어", "노트북", "키보드", "마우스", "모니터", "스마트폰", "이어폰", "충전기", "자동차", "자전거", "지하철", "버스", "비행기", "편의점", "도서관", "놀이공원", "수영장", "운동장", "체육관", "주말", "월요일", "점심시간", "퇴근길", "커피", "우산", "무지개", "눈사람", "소풍", "여행", "노래방", "영화관", "축구", "농구", "야구", "배드민턴", "달리기", "줄넘기", "하늘", "구름", "바다", "바람", "나무", "산", "강물", "호수", "햇살", "별빛", "달빛", "노을", "소나기", "안개", "번개", "단풍", "낙엽", "시냇물", "폭포", "숲속", "들판", "언덕", "모래", "파도", "은하수", "태양", "지구", "우주", "행성", "유성", "눈보라", "장마", "태풍", "가을", "겨울", "봄날", "여름", "새벽", "아침", "저녁", "한밤중", "일출", "일몰", "바닷가", "해변", "갯벌", "동굴", "사막", "초원", "개울", "샘물", "정원", "공원", "화분", "장미", "해바라기", "민들레", "코스모스", "튤립", "벚나무", "소나무", "대나무", "풀잎", "이슬", "서리", "우박", "먹구름", "별자리", "은하", "오로라", "학교", "선생님", "친구", "가족", "어머니", "아버지", "할머니", "할아버지", "동생", "이웃", "교실", "운동회", "방학", "시험", "숙제", "칠판", "공책", "연필", "지우개", "가방", "도시락", "졸업식", "의사", "간호사", "경찰관", "소방관", "요리사", "화가", "가수", "배우", "작가", "기자", "변호사", "판사", "군인", "농부", "어부", "우체부", "운전사", "비행사", "우주인", "과학자", "발명가", "선수", "감독", "사장님", "직원", "손님", "학생", "후배", "선배", "반장", "담임", "교장", "쉬는시간", "급식", "체육", "음악", "미술", "수학", "과학", "국어", "영어", "역사", "사회", "도덕", "행복", "사랑", "우정", "희망", "용기", "웃음", "눈물", "즐거움", "추억", "약속", "비밀", "소원", "선물", "생일", "축하", "고마움", "미안해", "보고싶다", "설렘", "두근두근", "포근함", "상쾌함", "든든함", "신나는", "즐거운", "편안한", "고요한", "평화로운", "자유로운", "용감한", "부지런한", "느긋한", "단단한", "부드러운", "향기로운", "아름다운", "사랑스러운", "파이팅", "화이팅", "힘내자", "고마워요", "사랑해요", "안녕하세요", "감사합니다", "반갑습니다", "잘자요", "좋은아침", "최고야", "대박", "멋져요", "축하해요", "환영합니다", "천천히", "열심히", "같이가자", "냉장고", "세탁기", "청소기", "텔레비전", "달력", "거울", "베개", "이불", "침대", "책상", "의자", "창문", "현관", "부엌", "욕실", "주전자", "숟가락", "젓가락", "접시", "우유", "주스", "아침밥", "저녁밥", "간식", "지갑", "열쇠", "안경", "모자", "장갑", "양말", "신발", "운동화", "슬리퍼", "목도리", "외투", "청바지", "치마", "바지", "셔츠", "손수건", "수건", "칫솔", "치약", "비누", "샴푸", "빗", "가위", "풀", "테이프", "자", "볼펜", "색연필", "크레파스", "물감", "붓", "스케치북", "책가방", "필통", "노트", "사전", "지도", "지구본", "망원경", "현미경", "나침반", "카메라", "라디오", "선풍기", "에어컨", "히터", "전등", "콘센트", "건전지", "리모컨", "양산", "텐트", "침낭", "배낭", "풍선", "인형", "장난감", "블록", "퍼즐", "연", "팽이", "윷놀이", "공기놀이", "그네", "시소", "병원", "약국", "은행", "우체국", "시장", "마트", "백화점", "서점", "문구점", "카페", "식당", "공항", "기차역", "항구", "다리", "터널", "고속도로", "신호등", "횡단보도", "놀이터", "동물원", "수족관", "박물관", "미술관", "극장", "경기장", "해수욕장", "스키장", "캠핑장", "옥상", "지하실", "골목길", "아파트", "마을", "도시", "시골", "고향", "학원", "산책", "등산", "물고기", "캠핑", "노래", "춤", "그림", "독서", "요리", "청소", "휴가", "수영", "스케이트", "스키", "볼링", "탁구", "배구", "골프", "테니스", "복싱", "태권도", "요가", "명상", "스트레칭", "줄다리기", "술래잡기", "보드게임", "노래자랑", "캠프파이어", "생일파티", "물놀이", "갯벌체험", "별구경", "낮잠", "늦잠", "야식", "설거지", "정리정돈", "장보기", "대한민국", "서울", "부산", "제주도", "한강", "독도", "한글", "세종대왕", "태극기", "무궁화", "설날", "추석", "한복", "김장", "보름달", "한국", "일본", "중국", "미국", "영국", "프랑스", "독일", "이탈리아", "스페인", "캐나다", "호주", "브라질", "이집트", "인도", "태국", "베트남", "필리핀", "몽골", "러시아", "터키", "그리스", "스위스", "뉴욕", "런던", "파리", "도쿄", "베이징", "경복궁", "남산", "한라산", "백두산", "설악산", "광화문", "불국사", "첨성대", "거북선", "훈민정음", "아리랑", "판소리", "탈춤", "사물놀이", "제기차기", "한옥", "온돌", "한과", "송편", "세배", "단오", "동지", "한식"];
 // 영어 단어 (쉬운 생활 단어, 소문자)
-const EN_WORDS = ["apple","banana","orange","grape","lemon","peach","melon","tomato","potato","onion","bread","cheese","butter","coffee","juice","water","pizza","burger","noodle","rice",
-  "school","teacher","student","friend","family","mother","father","brother","sister","house","window","door","table","chair","bed","pillow","mirror","clock","phone","computer",
-  "keyboard","mouse","screen","music","dance","movie","game","sport","soccer","basketball","baseball","tennis","swimming","running","walking","morning","evening","night","summer","winter",
-  "spring","autumn","sunny","rainy","cloud","river","mountain","ocean","island","forest","garden","flower","tree","dog","cat","rabbit","tiger","lion","monkey","elephant",
-  "bird","fish","horse","happy","smile","dream","hope","love","peace","brave","strong","quick","quiet","lucky","bright","travel","holiday","birthday","present","journey"];
-// 속담·짧은 글 (한컴타자 '짧은 글' 느낌) — 속담은 전해 내려오는 말이고, 문장은 직접 지은 거예요
-const KO_LINES = ["가는 말이 고우면 오는 말도 곱다","낮말은 새가 듣고 밤말은 쥐가 듣는다","티끌 모아 태산","호랑이도 제 말 하면 온다","원숭이도 나무에서 떨어진다","소 잃고 외양간 고친다","하늘이 무너져도 솟아날 구멍이 있다","백지장도 맞들면 낫다",
-  "고래 싸움에 새우 등 터진다","아는 길도 물어 가라","세 살 버릇 여든까지 간다","천 리 길도 한 걸음부터","가랑비에 옷 젖는 줄 모른다","말 한마디에 천 냥 빚도 갚는다","같은 값이면 다홍치마","서당 개 삼 년이면 풍월을 읊는다",
-  "우물 안 개구리","작은 고추가 더 맵다","바늘 도둑이 소 도둑 된다","윗물이 맑아야 아랫물이 맑다","꿩 먹고 알 먹기","개천에서 용 난다","열 번 찍어 안 넘어가는 나무 없다","시작이 반이다","급할수록 돌아가라","믿는 도끼에 발등 찍힌다",
-  "사공이 많으면 배가 산으로 간다","콩 심은 데 콩 나고 팥 심은 데 팥 난다","되로 주고 말로 받는다","구슬이 서 말이라도 꿰어야 보배","돌다리도 두들겨 보고 건너라","쇠귀에 경 읽기","발 없는 말이 천 리 간다","병 주고 약 준다",
-  "보기 좋은 떡이 먹기도 좋다","아니 땐 굴뚝에 연기 나랴","누워서 떡 먹기","땅 짚고 헤엄치기","오르지 못할 나무는 쳐다보지도 마라","짚신도 짝이 있다",
-  "오늘도 맛있는 점심을 먹었습니다","친구들과 함께 운동장에서 공을 찼어요","비 온 뒤에 하늘에 무지개가 떴어요","주말에는 가족과 함께 소풍을 가고 싶어요","따뜻한 커피 한 잔이 하루를 시작하게 해요","졸업식 날 우리는 모두 함께 웃었습니다",
-  "버스를 타고 바다를 보러 떠났어요","도서관에서 읽은 책이 정말 재미있었어요","눈이 내리는 날에는 따뜻한 이불이 최고예요","새로 산 키보드 소리가 참 기분 좋아요"];
+const EN_WORDS = ["apple", "banana", "orange", "grape", "lemon", "peach", "melon", "tomato", "potato", "onion", "bread", "cheese", "butter", "coffee", "juice", "water", "pizza", "burger", "noodle", "rice", "school", "teacher", "student", "friend", "family", "mother", "father", "brother", "sister", "house", "window", "door", "table", "chair", "bed", "pillow", "mirror", "clock", "phone", "computer", "keyboard", "mouse", "screen", "music", "dance", "movie", "game", "sport", "soccer", "basketball", "baseball", "tennis", "swimming", "running", "walking", "morning", "evening", "night", "summer", "winter", "spring", "autumn", "sunny", "rainy", "cloud", "river", "mountain", "ocean", "island", "forest", "garden", "flower", "tree", "dog", "cat", "rabbit", "tiger", "lion", "monkey", "elephant", "bird", "fish", "horse", "happy", "smile", "dream", "hope", "love", "peace", "brave", "strong", "quick", "quiet", "lucky", "bright", "travel", "holiday", "birthday", "present", "journey", "strawberry", "blueberry", "cherry", "mango", "kiwi", "coconut", "pumpkin", "carrot", "cabbage", "mushroom", "cucumber", "spinach", "garlic", "pepper", "sugar", "honey", "chocolate", "cookie", "cake", "pudding", "salad", "sandwich", "soup", "steak", "sausage", "pasta", "zebra", "giraffe", "panda", "koala", "kangaroo", "penguin", "dolphin", "whale", "shark", "turtle", "snake", "spider", "butterfly", "bee", "ant", "frog", "duck", "chicken", "sheep", "goat", "cow", "pig", "wolf", "fox", "bear", "deer", "owl", "eagle", "parrot", "squirrel", "sun", "moon", "star", "planet", "earth", "rocket", "galaxy", "thunder", "lightning", "storm", "rainbow", "snow", "wind", "breeze", "fog", "desert", "beach", "valley", "lake", "waterfall", "cave", "volcano", "meadow", "doctor", "nurse", "police", "firefighter", "chef", "painter", "singer", "actor", "writer", "pilot", "farmer", "driver", "scientist", "engineer", "artist", "dancer", "captain", "manager", "pencil", "eraser", "notebook", "backpack", "ruler", "scissors", "glue", "marker", "crayon", "desk", "blackboard", "library", "classroom", "playground", "lunchbox", "homework", "exam", "vacation", "wallet", "key", "glasses", "hat", "gloves", "socks", "shoes", "sneakers", "scarf", "jacket", "jeans", "shirt", "skirt", "towel", "soap", "shampoo", "toothbrush", "umbrella", "camera", "radio", "fan", "heater", "lamp", "bridge", "tunnel", "airport", "station", "harbor", "market", "bakery", "cafe", "restaurant", "hospital", "museum", "theater", "stadium", "zoo", "aquarium", "castle", "village", "city", "country", "honest", "gentle", "clever", "kind", "polite", "friendly", "cheerful", "patient", "careful", "curious", "creative", "powerful", "peaceful", "beautiful", "wonderful", "delicious", "colorful", "jump", "swim", "climb", "sing", "paint", "cook", "read", "write", "draw", "build", "explore", "discover", "imagine", "remember", "believe"];
+// 속담·짧은 글 (속담은 전해 내려오는 말이고, 문장은 직접 지었어요)
+const KO_LINES = ["가는 말이 고우면 오는 말도 곱다", "낮말은 새가 듣고 밤말은 쥐가 듣는다", "티끌 모아 태산", "호랑이도 제 말 하면 온다", "원숭이도 나무에서 떨어진다", "소 잃고 외양간 고친다", "하늘이 무너져도 솟아날 구멍이 있다", "백지장도 맞들면 낫다", "고래 싸움에 새우 등 터진다", "아는 길도 물어 가라", "세 살 버릇 여든까지 간다", "천 리 길도 한 걸음부터", "가랑비에 옷 젖는 줄 모른다", "말 한마디에 천 냥 빚도 갚는다", "같은 값이면 다홍치마", "서당 개 삼 년이면 풍월을 읊는다", "우물 안 개구리", "작은 고추가 더 맵다", "바늘 도둑이 소 도둑 된다", "윗물이 맑아야 아랫물이 맑다", "꿩 먹고 알 먹기", "개천에서 용 난다", "열 번 찍어 안 넘어가는 나무 없다", "시작이 반이다", "급할수록 돌아가라", "믿는 도끼에 발등 찍힌다", "사공이 많으면 배가 산으로 간다", "콩 심은 데 콩 나고 팥 심은 데 팥 난다", "되로 주고 말로 받는다", "구슬이 서 말이라도 꿰어야 보배", "돌다리도 두들겨 보고 건너라", "쇠귀에 경 읽기", "발 없는 말이 천 리 간다", "병 주고 약 준다", "보기 좋은 떡이 먹기도 좋다", "아니 땐 굴뚝에 연기 나랴", "누워서 떡 먹기", "땅 짚고 헤엄치기", "오르지 못할 나무는 쳐다보지도 마라", "짚신도 짝이 있다", "가는 날이 장날이다", "공든 탑이 무너지랴", "금강산도 식후경", "낫 놓고 기역 자도 모른다", "도둑이 제 발 저린다", "등잔 밑이 어둡다", "배보다 배꼽이 더 크다", "산 넘어 산이다", "수박 겉 핥기", "우는 아이 젖 준다", "울며 겨자 먹기", "제 눈에 안경", "지렁이도 밟으면 꿈틀한다", "첫술에 배부르랴", "침묵은 금이다", "하룻강아지 범 무서운 줄 모른다", "호랑이 굴에 가야 호랑이 새끼를 잡는다", "가재는 게 편", "고생 끝에 낙이 온다", "그림의 떡", "남의 떡이 더 커 보인다", "내 코가 석 자", "뛰는 놈 위에 나는 놈 있다", "말이 씨가 된다", "무소식이 희소식", "빈 수레가 요란하다", "세월이 약이다", "오늘도 맛있는 점심을 먹었습니다", "친구들과 함께 운동장에서 공을 찼어요", "비 온 뒤에 하늘에 무지개가 떴어요", "주말에는 가족과 함께 소풍을 가고 싶어요", "따뜻한 커피 한 잔이 하루를 시작하게 해요", "졸업식 날 우리는 모두 함께 웃었습니다", "버스를 타고 바다를 보러 떠났어요", "도서관에서 읽은 책이 정말 재미있었어요", "눈이 내리는 날에는 따뜻한 이불이 최고예요", "새로 산 키보드 소리가 참 기분 좋아요", "아침에 일어나 창문을 열었더니 바람이 시원했어요", "저녁노을이 붉게 물든 하늘을 오래도록 바라보았어요", "오랜만에 만난 친구와 밤늦도록 이야기를 나누었어요", "강아지와 함께 공원을 한 바퀴 산책했습니다", "새로운 도전은 언제나 가슴을 설레게 합니다", "작은 노력이 쌓이면 큰 변화를 만들어 냅니다", "오늘 배운 것을 내일 다시 한번 떠올려 봅니다", "할 수 있다는 마음이 가장 큰 힘이 됩니다", "시원한 수박 한 조각이 여름 더위를 날려 줘요", "엄마가 끓여 주신 미역국은 세상에서 가장 맛있어요", "우리 동네 빵집에서는 갓 구운 빵 냄새가 나요", "겨울밤에 먹는 군고구마는 정말 달콤해요"];
+// 영어 문장 (영어 속담 + 쉬운 문장)
+const EN_LINES = ["The sun is shining and the sky is blue", "I like to read books in the library", "We played soccer after school today", "My friend and I went to the park", "She drinks a cup of warm milk every morning", "The cat is sleeping on the soft sofa", "Let us go to the beach this weekend", "He rides his bicycle to school every day", "The children are laughing in the garden", "Please close the window because it is cold", "I will cook dinner for my family tonight", "The train leaves the station at noon", "Our team worked hard and won the game", "Fresh bread smells wonderful in the morning", "A small bird sat on the old tree", "Typing fast is fun when you practice every day", "The moon is bright tonight", "Rainy days are perfect for hot tea", "I saved a seat for you next to me", "Good friends make every day better", "A journey of a thousand miles begins with a single step", "Actions speak louder than words", "Practice makes perfect", "The early bird catches the worm", "Better late than never", "Every cloud has a silver lining", "Do not count your chickens before they hatch", "A friend in need is a friend indeed", "All that glitters is not gold", "Look before you leap", "Two heads are better than one", "Where there is a will there is a way", "Rome was not built in a day", "Easy come easy go", "Haste makes waste", "Slow and steady wins the race", "Time and tide wait for no man", "Laughter is the best medicine", "Honesty is the best policy", "The pen is mightier than the sword", "Do not judge a book by its cover", "Birds of a feather flock together", "Many hands make light work", "Out of sight out of mind", "You can not have your cake and eat it too", "The best way to learn is to try", "Small steps every day lead to big results", "Today is a good day to start something new", "Keep calm and keep typing"];
 
 // 장르 (id, 이름, 설명, 고를 수 있는 결승선 길이)
 const GENRES = [
-  { id: "kor", emoji: "🇰🇷", label: "한글 낱말", desc: "음식·동물·자연·생활 낱말", goals: [15, 25, 40], unit: "단어", line: false,
-    tip: "한/영 키를 <b>한글</b>로 두고, 단어를 다 치면 <b>Space</b> 또는 <b>Enter</b>로 넘겨요." },
-  { id: "eng", emoji: "🔤", label: "영어 단어", desc: "쉬운 생활 영어 단어", goals: [15, 25, 40], unit: "단어", line: false,
+  { id: "kor", emoji: "🇰🇷", label: "한글 낱말", desc: "음식·동물·자연·생활 낱말", goals: [15, 25, 40, 60], unit: "단어", line: false,
+    tip: "한/영 키를 <b>한글</b>로 두세요. 단어를 다 치면 <b>자동으로</b> 다음 단어로 넘어가요!" },
+  { id: "eng", emoji: "🔤", label: "영어 단어", desc: "쉬운 생활 영어 단어", goals: [15, 25, 40, 60], unit: "단어", line: false,
     tip: "한/영 키를 <b>영어</b>로 두세요. 다 치면 자동으로 넘어가요. (대소문자는 상관없어요)" },
-  { id: "proverb", emoji: "📜", label: "속담·짧은 글", desc: "한컴타자 '짧은 글' 느낌", goals: [5, 8, 12], unit: "줄", line: true,
-    tip: "한/영 키를 <b>한글</b>로 두고, 한 줄을 다 치면 <b>Enter</b>! 틀린 글자는 지우고 고치면 돼요." },
+  { id: "proverb", emoji: "📜", label: "속담·짧은 글", desc: "한컴타자 '짧은 글' 느낌", goals: [5, 8, 12, 20], unit: "줄", line: true,
+    tip: "한/영 키를 <b>한글</b>로 두세요. 한 줄을 다 치면 <b>자동으로</b> 다음 줄! 틀린 글자는 지우고 고치면 돼요." },
+  { id: "engline", emoji: "📖", label: "영어 문장", desc: "영어 속담·쉬운 문장", goals: [5, 8, 12, 20], unit: "줄", line: true,
+    tip: "한/영 키를 <b>영어</b>로 두세요. 한 줄을 다 치면 자동으로 넘어가요. (대소문자는 상관없어요)" },
   { id: "custom", emoji: "📝", label: "내가 쓴 글", desc: "원하는 글을 붙여넣기 (한 줄도 OK)", goals: [], unit: "줄", line: true,
-    tip: "방장이 쓴 글을 한 줄씩 쳐요. 글에 맞게 한/영 키를 확인하고, 한 줄을 다 치면 <b>Enter</b>!" },
-  { id: "mix", emoji: "🔥", label: "한·영 섞기", desc: "한글·영어 단어가 번갈아 나와요", goals: [15, 25, 40], unit: "단어", line: false,
-    tip: "한글과 영어가 <b>랜덤으로 섞여</b> 나와요! 단어마다 한/영 키를 바꿔야 해요. 다 치면 <b>Space</b> 또는 <b>Enter</b>." },
+    tip: "방장이 쓴 글을 한 줄씩 쳐요. 글에 맞게 한/영 키를 확인하세요. 한 줄을 다 치면 자동으로 넘어가요!" },
+  { id: "mix", emoji: "🔥", label: "한·영 섞기", desc: "한글·영어 단어가 번갈아 나와요", goals: [15, 25, 40, 60], unit: "단어", line: false,
+    tip: "한글과 영어가 <b>랜덤으로 섞여</b> 나와요! 단어마다 한/영 키를 바꿔야 해요." },
 ];
 const genreOf = (id) => GENRES.find((g) => g.id === id) || GENRES[0];
 
@@ -250,13 +248,16 @@ function buildItems(genre, goal, lines, rep) {
   if (genre === "kor") return pickFrom(KO_WORDS, goal);
   if (genre === "eng") return pickFrom(EN_WORDS, goal);
   if (genre === "proverb") return pickFrom(KO_LINES, goal);
+  if (genre === "engline") return pickFrom(EN_LINES, goal);
   if (genre === "mix") return shuffle([...pickFrom(KO_WORDS, Math.ceil(goal / 2)), ...pickFrom(EN_WORDS, Math.floor(goal / 2))]);
   if (genre === "custom") { let out = []; for (let i = 0; i < (rep || 1); i++) out = out.concat(lines || []); return out.slice(0, CUSTOM_MAX_ITEMS); }
   return [];
 }
+// ⭐ 황금 글감 자리 뽑기 (첫 글감은 빼요)
+function pickGold(total, rate) { const out = []; for (let i = 1; i < total; i++) if (Math.random() < rate) out.push(i); return out; }
 
 // ===================== 한글 비교 =====================
-// 한글은 입력기가 글자를 조립하는 중이라 "파이ㅅ" 처럼 반쪽 글자가 섞여요.
+// 한글은 입력기가 글자를 조립하는 중이라 "파이ㅅ" 처럼 반쪽 글자가 섞이고, 다음 글자를 치면 받침이 옮겨 가기도 해요.
 // 그래서 글자를 키보드로 누르는 낱개 자음·모음 순서로 풀어서 비교해요. (과 → ㄱㅗㅏ)
 const _L = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ", _V = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ";
 const _T = ["", "ㄱ", "ㄲ", "ㄳ", "ㄴ", "ㄵ", "ㄶ", "ㄷ", "ㄹ", "ㄺ", "ㄻ", "ㄼ", "ㄽ", "ㄾ", "ㄿ", "ㅀ", "ㅁ", "ㅂ", "ㅄ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
@@ -272,30 +273,54 @@ function toJamo(str) {
   return out.replace(/[ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄㅘㅙㅚㅝㅞㅟㅢ]/g, (m) => _SPLIT[m]);
 }
 const lc = (s) => String(s).toLowerCase();
-const sameText = (a, b) => lc(a) === lc(b);
-// 지금까지 친 글자가 정답의 앞부분과 같은지 (조립 중인 글자도 OK, 영어 대소문자는 무시)
-const isPrefix = (typed, word) => toJamo(lc(word)).startsWith(toJamo(lc(typed)));
-const keyCount = (word) => toJamo(word).length;   // 누른 키 수 (타수 계산용)
+const jam = (s) => toJamo(lc(s));                  // 비교용: 소문자 + 낱개 자모
+const keyCount = (word) => toJamo(word).length;    // 누른 키 수 (타수 계산용)
+// 입력창 전체 글자(stream)에서 이미 통과한 부분(consumed 자모 수)을 빼고, 앞쪽 공백을 버린 "지금 치는 글자"
+const segOf = (value, consumed) => jam(value).slice(consumed).replace(/^\s+/, "");
+// 정답의 앞부분과 같은지 / 완전히 같은지
+const segPrefix = (seg, word) => jam(word).startsWith(seg);
+const segDone = (seg, word) => seg === jam(word);
+// 정답 글자 중 몇 글자까지 맞았는지 (화면에 초록색으로 보여주려고)
+function okChars(seg, word) {
+  const tj = jam(word); let m = 0; while (m < seg.length && m < tj.length && seg[m] === tj[m]) m++;
+  let acc = 0, n = 0;
+  for (const ch of word) { const len = jam(ch).length; if (acc + len <= m) { acc += len; n++; } else break; }
+  return n;
+}
 
 // 순위: 완주한 사람은 기록(ms) 짧은 순, 못 끝낸 사람은 진행 수 많은 순
-function computeFinal(players, prog, times, total, kMap, eMap) {
-  const rows = players.map((id) => ({ id, n: prog[id] || 0, ms: (prog[id] || 0) >= total ? (times[id] || 0) : 0, k: (kMap && kMap[id]) || 0, e: (eMap && eMap[id]) || 0 }));
+function computeFinal(players, prog, times, total, kMap, eMap, cMap) {
+  const rows = players.map((id) => ({ id, n: prog[id] || 0, ms: (prog[id] || 0) >= total ? (times[id] || 0) : 0, k: (kMap && kMap[id]) || 0, e: (eMap && eMap[id]) || 0, c: (cMap && cMap[id]) || 0 }));
   const fin = rows.filter((r) => r.n >= total).sort((a, b) => a.ms - b.ms);
   const rest = rows.filter((r) => r.n < total).sort((a, b) => b.n - a.n);
   return [...fin, ...rest];
+}
+const cpmOf = (k, ms) => (ms > 0 ? Math.round(k / (ms / 60000)) : 0);
+const accOf = (r) => (r.n ? Math.max(0, Math.round(((r.n - r.e) / r.n) * 100)) : 0);
+// 어워드: 완주한 사람 중 최고 타수 / 최고 정확도 / 최고 콤보
+function awardsOf(final, total) {
+  const fin = final.filter((r) => r.n >= total && r.ms > 0), out = {};
+  if (!fin.length) return out;
+  const best = (fn) => fin.reduce((a, b) => (fn(b) > fn(a) ? b : a));
+  const bc = best((r) => cpmOf(r.k, r.ms)); (out[bc.id] = out[bc.id] || []).push("⚡ 최고 타수");
+  const ba = best((r) => accOf(r) * 1000 + cpmOf(r.k, r.ms) / 1000); (out[ba.id] = out[ba.id] || []).push("🎯 최고 정확도");
+  const bk = best((r) => r.c); if (bk.c >= 3) (out[bk.id] = out[bk.id] || []).push(`🔥 최고 콤보 x${bk.c}`);
+  return out;
 }
 // </PURE>
 
 // ===================== 기본 변수 =====================
 const $ = (id) => document.getElementById(id);
 const myId = Math.random().toString(36).slice(2, 10);
-let joinedAt = Date.now(), myName = "", roomCode = "";
+let joinedAt = Date.now(), myName = "", roomCode = "", mySpec = false;
 let net = null, present = {}, settled = false;
-let G = { phase: "lobby", gid: 0, genre: "kor", goal: 25, rep: 1, total: 0, words: [], players: [], names: {}, cd: 0, final: null };
-let prog = {}, times = {}, kMap = {}, eMap = {};
-let myN = 0, myK = 0, myE = 0, combo = 0, charges = 0, done = false, errFlag = false, hitUntil = 0;
+const newG = () => ({ phase: "lobby", gid: 0, genre: "kor", goal: 25, rep: 1, total: 0, words: [], gold: [], players: [], names: {}, cd: 0, final: null });
+let G = newG();
+let prog = {}, times = {}, kMap = {}, eMap = {}, cMap = {};
+let myN = 0, myK = 0, myE = 0, combo = 0, bestCombo = 0, bag = [], done = false, errFlag = false, hitUntil = 0, consumed = 0;
 let seenGid = -1, seenKey = "", raceStartAt = 0, cdEnd = 0, hostRaceAt = 0, hostFirst = 0, doneMs = 0, lastLeader = null;
 let muted = false, customText = "";
+const ITEM = { blur: { icon: "💥", name: "흐리기" }, back: { icon: "🐌", name: "뒤로 가!" } };
 
 const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const norm = (t) => String(t).replace(/\s+/g, "").toLowerCase();
@@ -308,7 +333,7 @@ const nameOf = (id) => (G.names && G.names[id]) || (present[id] && present[id].n
 function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove("show"), 2000); }
 const fmt = (ms) => (ms / 1000).toFixed(1) + "초";
 const isLine = () => genreOf(G.genre).line;
-const cpmOf = (k, ms) => (ms > 0 ? Math.round(k / (ms / 60000)) : 0);
+const isGold = (i) => Array.isArray(G.gold) && G.gold.includes(i);
 
 function confetti() {
   const em = ["🎉", "✨", "⭐", "🎊", "💫"];
@@ -342,29 +367,30 @@ function makeSupabaseNet(room) {
   ch.on("broadcast", { event: "m" }, ({ payload }) => api.msgFn && api.msgFn(payload));
   ch.on("presence", { event: "sync" }, () => {
     const st = ch.presenceState(), list = {};
-    for (const id in st) { const p = st[id][st[id].length - 1]; if (p) list[id] = { name: p.name, joinedAt: p.joinedAt }; }
+    for (const id in st) { const p = st[id][st[id].length - 1]; if (p) list[id] = { name: p.name, joinedAt: p.joinedAt, spec: !!p.spec }; }
     api.presFn && api.presFn(list);
   });
   ch.subscribe(async (status) => {
-    if (status === "SUBSCRIBED") { await ch.track({ name: myName, joinedAt }); api.ready && api.ready(); }
+    if (status === "SUBSCRIBED") { await ch.track({ name: myName, joinedAt, spec: mySpec }); api.ready && api.ready(); }
     if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") feed("서버 연결 문제가 생겼어요. 새로고침해 보세요.", "sys");
   });
   api.send = (msg) => { if (!api.closed) ch.send({ type: "broadcast", event: "m", payload: msg }); };
+  api.retrack = () => { if (!api.closed) ch.track({ name: myName, joinedAt, spec: mySpec }); };
   api.leave = () => { api.closed = true; api.msgFn = api.presFn = api.ready = null; ch.untrack().catch(() => {}); client.removeChannel(ch); };
   return api;
 }
 function makeLocalNet(room) {
   const bc = new BroadcastChannel("typing-" + room);
   const api = { msgFn: null, presFn: null }, seen = {};
-  const me = () => ({ id: myId, name: myName, joinedAt });
+  const me = () => ({ id: myId, name: myName, joinedAt, spec: mySpec });
   const emitPres = () => {
-    const now = Date.now(), list = { [myId]: { name: myName, joinedAt } };
+    const now = Date.now(), list = { [myId]: { name: myName, joinedAt, spec: mySpec } };
     for (const id in seen) if (now - seen[id].t < 5000) list[id] = seen[id].p; else delete seen[id];
     api.presFn && api.presFn(list);
   };
   bc.onmessage = (e) => {
     const m = e.data;
-    if (m.__ping) { const isNew = !seen[m.p.id]; seen[m.p.id] = { p: { name: m.p.name, joinedAt: m.p.joinedAt }, t: Date.now() }; if (isNew) { bc.postMessage({ __ping: 1, p: me() }); emitPres(); } return; }
+    if (m.__ping) { const isNew = !seen[m.p.id]; seen[m.p.id] = { p: { name: m.p.name, joinedAt: m.p.joinedAt, spec: !!m.p.spec }, t: Date.now() }; if (isNew) { bc.postMessage({ __ping: 1, p: me() }); } emitPres(); return; }
     if (m.__bye) { delete seen[m.id]; emitPres(); return; }
     api.msgFn && api.msgFn(m);
   };
@@ -373,6 +399,7 @@ function makeLocalNet(room) {
   addEventListener("beforeunload", bye);
   setTimeout(() => { if (api.closed) return; bc.postMessage({ __ping: 1, p: me() }); emitPres(); api.ready && api.ready(); }, 50);
   api.send = (msg) => { if (!api.closed) bc.postMessage(msg); };
+  api.retrack = () => { if (!api.closed) { bc.postMessage({ __ping: 1, p: me() }); emitPres(); } };
   api.leave = () => { api.closed = true; api.msgFn = api.presFn = api.ready = null; clearInterval(iv); bye(); removeEventListener("beforeunload", bye); bc.close(); };
   return api;
 }
@@ -387,13 +414,13 @@ if (params.get("room")) $("roomInput").value = params.get("room");
 try { $("nameInput").value = localStorage.getItem("typingName") || ""; } catch (e) {}
 
 function alertBox(t) { const p = $("join").querySelector(".sub"); p.textContent = "⚠️ " + t; p.classList.add("err"); }
-function enter(code, mode) {
+function enter(code, mode, spec) {
   myName = $("nameInput").value.trim();
   if (!myName) { alertBox("닉네임을 입력해 주세요"); return; }
   code = code.trim().toUpperCase();
   if (!code && mode === "create") code = Array.from({ length: 4 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 32)]).join("");
   if (!/^[A-Z0-9]{2,12}$/.test(code)) { alertBox("방 번호는 영어나 숫자로 2~12자예요 (띄어쓰기·특수문자 X)"); return; }
-  joinedAt = Date.now();
+  mySpec = !!spec; joinedAt = Date.now();
   try { localStorage.setItem("typingName", myName); } catch (e) {}
   roomCode = code;
   history.replaceState(null, "", "?room=" + code + (params.get("local") ? "&local=1" : ""));
@@ -408,19 +435,18 @@ function enter(code, mode) {
       const dup = ids.find((id) => id !== myId && norm(present[id].name) === norm(myName) &&
         (present[id].joinedAt < joinedAt || (present[id].joinedAt === joinedAt && id < myId)));
       if (dup) { leaveRoom(`'${myName}' 닉네임은 이 방에 이미 있어요. 다른 닉네임으로 들어와 주세요.`); return; }
-      if (ids.indexOf(myId) >= MAX_PLAYERS) { leaveRoom(`방이 가득 찼어요 (최대 ${MAX_PLAYERS}명).`); return; }
       if (mode === "create" && ids.length > 1 && ids[0] !== myId) { leaveRoom(`'${code}' 방은 이미 누가 쓰고 있어요. 다른 번호로 만들거나 '입장하기'를 눌러 주세요.`); return; }
       settled = true; onPresence(present);
       net.send({ t: "hello", from: myId });
       feed(mode === "create" ? `'${code}' 방을 만들었어요. 친구에게 방 번호나 초대 링크를 알려 주세요!` : `'${code}' 방에 들어왔어요.`, "sys");
+      if (mySpec) feed("👀 관전으로 들어왔어요. 게임에는 참여하지 않고 구경만 해요. (채팅은 할 수 있어요)", "sys");
     }, 2000);
   };
   render();
 }
 function leaveRoom(msg) {
   if (net && net.leave) net.leave();
-  net = null; present = {}; settled = false; seenGid = -1; seenKey = "";
-  G = { phase: "lobby", gid: 0, genre: "kor", goal: 25, rep: 1, total: 0, words: [], players: [], names: {}, cd: 0, final: null };
+  net = null; present = {}; settled = false; seenGid = -1; seenKey = ""; G = newG();
   $("chatlog").innerHTML = "";
   $("game").classList.add("hidden"); $("join").classList.remove("hidden");
   history.replaceState(null, "", location.pathname);
@@ -428,6 +454,7 @@ function leaveRoom(msg) {
 }
 $("createBtn").onclick = () => enter($("roomInput").value, "create");
 $("enterBtn").onclick = () => enter($("roomInput").value, "join");
+$("watchBtn").onclick = () => enter($("roomInput").value, "join", true);
 $("roomInput").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.isComposing) enter($("roomInput").value, "join"); });
 $("copyBtn").onclick = async () => {
   const url = location.origin + location.pathname + "?room=" + roomCode;
@@ -454,24 +481,35 @@ $("chatForm").onsubmit = (e) => {
   const t = $("chatIn").value.trim(), now = Date.now();
   if (!t || !net || now - lastChatAt < 300) return;
   lastChatAt = now; $("chatIn").value = "";
-  emit({ t: "chat", id: myId, name: myName, text: t.slice(0, 40) });
+  emit({ t: "chat", id: myId, name: myName, text: t.slice(0, 40), spec: mySpec });
 };
 
-// ===================== 접속자 / 방장 =====================
+// ===================== 접속자 / 방장 / 관전 =====================
 function presentIds() { return Object.keys(present).sort((a, b) => present[a].joinedAt - present[b].joinedAt || (a < b ? -1 : 1)); }
-const isHost = () => settled && presentIds()[0] === myId;
+const playerIds = () => presentIds().filter((id) => !present[id].spec);
+const specIds = () => presentIds().filter((id) => present[id].spec);
+const hostOrder = () => [...playerIds(), ...specIds()];
+const isHost = () => settled && hostOrder()[0] === myId;
 function onPresence(list) {
   const prev = present; present = list;
   for (const id in prev) if (!present[id] && settled) feed(`${prev[id].name}님이 나갔어요.`, "sys");
-  for (const id in present) if (!prev[id] && id !== myId && settled) feed(`${present[id].name}님이 들어왔어요.`, "sys");
+  for (const id in present) if (!prev[id] && id !== myId && settled) feed(`${present[id].name}님이 들어왔어요${present[id].spec ? " (👀 관전)" : ""}.`, "sys");
+  // 참가 자리(8명)가 넘치면 가장 늦게 온 사람은 관전으로
+  if (settled && !mySpec && playerIds().indexOf(myId) >= MAX_PLAYERS) { mySpec = true; net.retrack && net.retrack(); feed(`참가 자리가 가득 차서 👀 관전으로 바뀌었어요. (최대 ${MAX_PLAYERS}명)`, "sys"); }
   render();
+}
+function setSpectator(v) {
+  if (!net || G.phase !== "lobby") { toast("대기실에서만 바꿀 수 있어요"); return; }
+  if (!v && playerIds().length >= MAX_PLAYERS) { toast("참가 자리가 가득 찼어요"); return; }
+  mySpec = v; net.retrack && net.retrack();
+  feed(v ? "👀 관전으로 바꿨어요." : "🙋 참가자로 바꿨어요.", "sys");
 }
 function pushState() { if (isHost()) emit({ t: "state", G: JSON.parse(JSON.stringify(G)) }); }
 
 // ===================== 방장: 게임 진행 =====================
 function startRace() {
   if (!isHost() || (G.phase !== "lobby" && G.phase !== "end")) return;
-  const ids = presentIds().slice(0, MAX_PLAYERS);
+  const ids = playerIds().slice(0, MAX_PLAYERS);
   if (ids.length < MIN_PLAYERS) return;
   let items;
   if (G.genre === "custom") {
@@ -480,7 +518,7 @@ function startRace() {
     items = buildItems("custom", 0, lines, G.rep);
   } else items = buildItems(G.genre, G.goal);
   const names = {}; ids.forEach((id) => (names[id] = present[id].name));
-  G = { ...G, phase: "count", gid: G.gid + 1, words: items, total: items.length, players: ids, names, cd: COUNTDOWN_MS, final: null };
+  G = { ...G, phase: "count", gid: G.gid + 1, words: items, gold: pickGold(items.length, genreOf(G.genre).line ? GOLD_RATE_LINE : GOLD_RATE_WORD), total: items.length, players: ids, names, cd: COUNTDOWN_MS, final: null };
   hostRaceAt = Date.now() + COUNTDOWN_MS; hostFirst = 0;
   pushState();
 }
@@ -495,7 +533,7 @@ setInterval(() => {   // 방장이 0.4초마다 진행 체크
     const finished = alive.filter((id) => (prog[id] || 0) >= G.total);
     if (finished.length && !hostFirst) hostFirst = now;
     if (!alive.length || finished.length === alive.length || (hostFirst && now - hostFirst > FINISH_WAIT_MS)) {
-      G.phase = "end"; G.final = computeFinal(G.players, prog, times, G.total, kMap, eMap); hostFirst = 0; pushState();
+      G.phase = "end"; G.final = computeFinal(G.players, prog, times, G.total, kMap, eMap, cMap); hostFirst = 0; pushState();
     }
   }
 }, 400);
@@ -506,16 +544,16 @@ function handle(m) {
     case "hello": if (isHost()) pushState(); break;
     case "state": {
       G = m.G;
-      if (G.gid !== seenGid) { seenGid = G.gid; prog = {}; times = {}; kMap = {}; eMap = {}; myN = 0; myK = 0; myE = 0; combo = 0; charges = 0; done = false; errFlag = false; hitUntil = 0; doneMs = 0; lastLeader = null; }
+      if (G.gid !== seenGid) { seenGid = G.gid; prog = {}; times = {}; kMap = {}; eMap = {}; cMap = {}; myN = 0; myK = 0; myE = 0; combo = 0; bestCombo = 0; bag = []; done = false; errFlag = false; hitUntil = 0; doneMs = 0; lastLeader = null; consumed = 0; $("inp").value = ""; }
       const key = G.gid + ":" + G.phase;
       if (key !== seenKey) {
         seenKey = key;
         if (G.phase === "count") {
-          cdEnd = Date.now() + G.cd; $("inp").value = "";
-          feed(`🏁 곧 시작해요! [${genreOf(G.genre).label}] ` + (G.genre === "eng" ? "한/영 키를 영어로 바꿔 주세요" : G.genre === "mix" ? "단어마다 한/영 키를 바꿔야 해요!" : G.genre === "custom" ? "글에 맞게 한/영 키를 확인하세요" : "한/영 키를 한글로 바꿔 주세요"), "sys");
+          cdEnd = Date.now() + G.cd; $("inp").value = ""; consumed = 0;
+          feed(`🏁 곧 시작해요! [${genreOf(G.genre).label}] ` + ({ eng: "한/영 키를 영어로 바꿔 주세요", engline: "한/영 키를 영어로 바꿔 주세요", mix: "단어마다 한/영 키를 바꿔야 해요!", custom: "글에 맞게 한/영 키를 확인하세요" }[G.genre] || "한/영 키를 한글로 바꿔 주세요"), "sys");
         }
-        if (G.phase === "race") { raceStartAt = Date.now(); $("inp").value = ""; beep(880, 0.2, "triangle", 0.08); setTimeout(() => { if (document.activeElement !== $("chatIn")) $("inp").focus(); }, 30); }
-        if (G.phase === "end") { jingle(); if (G.final && G.final[0] && G.final[0].id === myId && G.final[0].n >= G.total) confetti(); }
+        if (G.phase === "race") { raceStartAt = Date.now(); $("inp").value = ""; consumed = 0; beep(880, 0.2, "triangle", 0.08); setTimeout(() => { if (document.activeElement !== $("chatIn")) $("inp").focus(); }, 30); }
+        if (G.phase === "end") onEnd();
       }
       render();
       break;
@@ -530,16 +568,24 @@ function handle(m) {
       break;
     case "prog":
       if (m.g !== G.gid) break;
-      prog[m.id] = m.n; kMap[m.id] = m.k || 0; eMap[m.id] = m.e || 0;
+      prog[m.id] = m.n; kMap[m.id] = m.k || 0; eMap[m.id] = m.e || 0; cMap[m.id] = m.c || 0;
       if (m.n >= G.total && !times[m.id]) { times[m.id] = m.ms; feed(`🏁 ${nameOf(m.id)} 완주! ${fmt(m.ms)}`, "fin"); }
       checkLeader(); renderLanes();
       break;
-    case "hit":
+    case "hit": {
       if (m.g !== G.gid) break;
-      feed(`💥 ${nameOf(m.from)} → ${nameOf(m.to)} 방해!`, "hit");
-      if (m.to === myId) { hitUntil = Date.now() + HIT_MS; toast("💥 방해당했다! 글자가 흐려져요"); beep(120, 0.3, "sawtooth", 0.08); shakeScreen(); }
+      const it = ITEM[m.k] || ITEM.blur;
+      feed(`${it.icon} ${nameOf(m.from)} → ${nameOf(m.to)} ${it.name}!`, "hit");
+      if (m.to === myId && !done && G.phase === "race" && G.players.includes(myId)) {
+        shakeScreen(); beep(120, 0.3, "sawtooth", 0.08);
+        if (m.k === "back") {
+          if (myN > 0) { myN--; myK = Math.max(0, myK - keyCount(G.words[myN])); combo = 0; errFlag = false; consumed = jam(inp.value).length; emit({ t: "prog", id: myId, n: myN, g: G.gid, ms: 0, k: myK, e: myE, c: bestCombo }); toast("🐌 뒤로 밀렸어요! 방금 단어를 다시 쳐요"); render(); }
+          else toast("🐌 뒤로 가기 공격! (더 밀릴 곳이 없어 무사해요)");
+        } else { hitUntil = Date.now() + HIT_MS; toast("💥 방해당했다! 글자가 흐려져요"); }
+      }
       break;
-    case "chat": if (typeof m.text === "string") addChat(m.id, String(m.name || "?").slice(0, 10), m.text.slice(0, 40)); break;
+    }
+    case "chat": if (typeof m.text === "string") addChat(m.id, (m.spec ? "👀 " : "") + String(m.name || "?").slice(0, 10), m.text.slice(0, 40)); break;
     case "lobby": if (isHost() && G.phase === "end") { G.phase = "lobby"; G.final = null; pushState(); } break;
   }
 }
@@ -549,67 +595,83 @@ function checkLeader() {   // 선두가 바뀌면 알려줘요
   for (const id of G.players) { const n = prog[id] || 0; if (n > max || (n === max && id === lastLeader && n > 0)) { best = id; max = n; } }
   if (best && max > 0 && best !== lastLeader && (!lastLeader || (prog[lastLeader] || 0) < max)) { lastLeader = best; feed(`🔥 ${nameOf(best)}님이 선두로 올라섰어요!`, "lead"); }
 }
+// 결과가 나오면: 소리·폭죽, 장르별 내 최고 타수 기록
+function onEnd() {
+  jingle();
+  const me = (G.final || []).find((r) => r.id === myId);
+  if (!me || me.n < G.total) return;
+  if (G.final[0] && G.final[0].id === myId) confetti();
+  const cpm = cpmOf(me.k, me.ms), key = "typingBest_" + G.genre;
+  try {
+    const old = +localStorage.getItem(key) || 0;
+    if (cpm > old) { localStorage.setItem(key, String(cpm)); if (old) { feed(`🏆 ${genreOf(G.genre).label} 개인 최고 타수 갱신! ${cpm}타/분 (이전 ${old})`, "gold"); confetti(); } else feed(`📌 ${genreOf(G.genre).label} 첫 기록: ${cpm}타/분`, "gold"); }
+  } catch (e) {}
+}
 
 // ===================== 타이핑 =====================
+// 입력창을 지우지 않고 계속 이어 쓰는 방식이에요. (한글은 글자를 조립하는 중에 지우면 글자가 꼬이기 때문이에요)
+// 이미 통과한 부분은 consumed(자모 수)로 건너뛰고, 그 뒤에 친 글자만 지금 글감과 비교해요.
 const inp = $("inp");
-const canType = () => G.phase === "race" && G.players.includes(myId) && !done;
+const canType = () => G.phase === "race" && G.players.includes(myId) && !mySpec && !done;
 function renderWord() {
   const w = G.words[myN]; if (w == null) return;
-  const v = inp.value.trim(), okPrefix = isPrefix(v, w);
-  // 완성된 글자 단위로 초록색 표시 (조립 중인 마지막 글자는 아직 회색)
-  let ok = 0; while (ok < v.length && ok < w.length && lc(v[ok]) === lc(w[ok]) && (ok < v.length - 1 || sameText(v, w))) ok++;
+  const seg = segOf(inp.value, consumed), okPrefix = segPrefix(seg, w), ok = okChars(seg, w);
   $("wordbox").innerHTML = `<span class="ok">${esc(w.slice(0, ok))}</span><span class="${okPrefix ? "rest" : "bad"}">${esc(w.slice(ok))}</span>`;
   $("wordbox").dataset.sz = w.length > 22 ? 3 : w.length > 12 ? 2 : w.length > 8 ? 1 : 0;
-  $("nextbox").textContent = isLine() ? (G.words[myN + 1] ? "다음 ▶ " + G.words[myN + 1] : "") : G.words.slice(myN + 1, myN + 4).join("   ");
+  $("wordbox").classList.toggle("gold", isGold(myN));
+  inp.classList.toggle("bad", !okPrefix);
+  const nx = (i) => (isGold(i) ? "⭐" : "") + G.words[i];
+  $("nextbox").textContent = isLine() ? (G.words[myN + 1] ? "다음 ▶ " + nx(myN + 1) : "") : [1, 2, 3].filter((d) => G.words[myN + d] != null).map((d) => nx(myN + d)).join("   ");
   $("combo").textContent = combo >= 2 ? `🔥 콤보 x${combo}` : "";
-  $("chg").textContent = charges;
-  $("hitBtn").disabled = charges <= 0;
-  $("hint").innerHTML = isLine() ? "다 치면 <b>Enter</b> → 다음 줄! (틀린 글자는 지우고 고쳐요)" : "다 치면 <b>Space</b> 또는 <b>Enter</b> → 다음 단어!";
+  const b = $("hitBtn");
+  b.disabled = !bag.length;
+  b.textContent = bag.length ? `${ITEM[bag[0]].icon} ${ITEM[bag[0]].name} 쓰기 (Tab) · 가진 아이템 ${bag.map((x) => ITEM[x].icon).join("")}` : "아이템 없음 — 5콤보나 ⭐ 글감으로 얻어요";
+  $("hint").textContent = isLine() ? "다 치면 자동으로 다음 줄! 틀린 글자는 지우고 고쳐요." : "다 치면 자동으로 다음 단어!";
 }
-function flagError(force) {
+function flagError() {
   if (!errFlag) { errFlag = true; combo = 0; myE++; beep(150, 0.15, "sawtooth", 0.07); }
-  else if (force) beep(150, 0.1, "sawtooth", 0.05);
-  inp.classList.add("bad"); setTimeout(() => inp.classList.remove("bad"), 200);
 }
-inp.addEventListener("input", (e) => {
-  if (!canType()) { inp.value = ""; return; }
-  const v = inp.value.trim(), w = G.words[myN];
-  if (!isPrefix(v, w)) flagError();
-  if (!(e && e.isComposing) && sameText(v, w)) correct();   // 조립이 끝난 상태에서 정확히 맞으면 바로 통과
-  renderWord();
-});
-// 한글은 마지막 글자가 조립 중일 수 있어서, Space/Enter를 뗐을 때 최종 확인해요
-inp.addEventListener("keyup", (e) => {
-  if (!canType()) return;
-  const line = isLine();
-  if (e.code !== "Enter" && !(e.code === "Space" && !line)) return;
-  const v = inp.value.trim(), w = G.words[myN];
-  if (!v) { inp.value = ""; return; }
-  if (sameText(v, w)) correct();
-  else { flagError(true); if (!line) inp.value = ""; renderWord(); }   // 짧은 글은 지우지 않고 고치게 해요
-});
+function onType(e) {
+  if (!canType()) { inp.value = ""; consumed = 0; return; }
+  if (jam(inp.value).length < consumed) { inp.value = ""; consumed = 0; }   // 이전 글자까지 지워 버린 경우 처음부터
+  for (let guard = 0; guard < 3 && canType(); guard++) {
+    const w = G.words[myN], seg = segOf(inp.value, consumed);
+    if (!segPrefix(seg, w)) { flagError(); break; }
+    if (!segDone(seg, w)) break;
+    consumed = jam(inp.value).length;   // 정확히 다 쳤으면 바로 통과! (한글 마지막 글자가 조립 중이어도 OK)
+    correct();
+  }
+  // 조립 중이 아니고 다 통과한 상태면 입력창을 비워서 가볍게
+  if (!(e && e.isComposing) && canType() && segOf(inp.value, consumed) === "" && inp.value) { inp.value = ""; consumed = 0; }
+  if (G.phase === "race") renderWord();
+}
+inp.addEventListener("input", onType);
 inp.addEventListener("keydown", (e) => { if (e.key === "Tab") { e.preventDefault(); useHit(); } });
 document.addEventListener("click", (e) => { if (canType() && !e.target.closest("#chatbox") && !e.target.closest("#lobby")) inp.focus(); });
+function giveItem(why) {
+  if (bag.length >= MAX_BAG) { toast(`${why} 아이템이 가득 찼어요 (최대 ${MAX_BAG}개)`); return; }
+  const t = Math.random() < 0.5 ? "blur" : "back"; bag.push(t);
+  toast(`${ITEM[t].icon} ${ITEM[t].name} 아이템 획득! (Tab)`); beep(988, 0.12, "triangle", 0.08);
+  $("combo").classList.remove("pop"); void $("combo").offsetWidth; $("combo").classList.add("pop");
+}
 function correct() {
-  const w = G.words[myN];
-  myK += keyCount(w); myN++; combo++; errFlag = false; inp.value = "";
+  const w = G.words[myN], gold = isGold(myN);
+  myK += keyCount(w); myN++; combo++; bestCombo = Math.max(bestCombo, combo); errFlag = false;
   beep(440 * Math.pow(1.06, Math.min(combo, 14)), 0.07, "square", 0.05);
-  if (combo % COMBO_FOR_CHARGE === 0 && charges < MAX_CHARGES) {
-    charges++; toast("💥 방해 아이템 획득! (Tab)");
-    $("combo").classList.remove("pop"); void $("combo").offsetWidth; $("combo").classList.add("pop"); beep(988, 0.12, "triangle", 0.08);
-  }
+  if (gold) { feed(`⭐ ${myName}님이 황금 글감을 쳤어요!`, "gold"); giveItem("⭐"); }
+  else if (combo % COMBO_FOR_ITEM === 0) giveItem("콤보");
   let ms = 0;
   if (myN >= G.total) { done = true; ms = doneMs = Date.now() - raceStartAt; jingle(); confetti(); }
-  emit({ t: "prog", id: myId, n: myN, g: G.gid, ms, k: myK, e: myE });
+  emit({ t: "prog", id: myId, n: myN, g: G.gid, ms, k: myK, e: myE, c: bestCombo });
   render();
 }
 function useHit() {
-  if (!canType() || charges <= 0) return;
+  if (!canType() || !bag.length) return;
   // 나 말고 가장 앞서 있는 사람(아직 완주 안 한)을 노려요
   const cand = G.players.filter((id) => id !== myId && present[id] && (prog[id] || 0) < G.total).sort((a, b) => (prog[b] || 0) - (prog[a] || 0));
   if (!cand.length) { toast("방해할 상대가 없어요"); return; }
-  charges--; beep(300, 0.12, "triangle", 0.08);
-  emit({ t: "hit", from: myId, to: cand[0], g: G.gid });
+  const k = bag.shift(); beep(300, 0.12, "triangle", 0.08);
+  emit({ t: "hit", from: myId, to: cand[0], g: G.gid, k });
   renderWord();
 }
 $("hitBtn").onclick = () => { useHit(); if (canType()) inp.focus(); };
@@ -618,18 +680,18 @@ $("hitBtn").onclick = () => { useHit(); if (canType()) inp.focus(); };
 const PH = { lobby: "🎮 대기실", count: "⏳ 준비!", race: "🏃 달려라!", end: "🏁 결과" };
 function render() {
   if (!net) return;
-  const ids = presentIds(), host = isHost();
-  $("cnt").textContent = `👥 ${ids.length}/${MAX_PLAYERS}`;
+  const players = playerIds(), specs = specIds(), host = isHost();
+  $("cnt").textContent = `👥 ${players.length}/${MAX_PLAYERS}` + (specs.length ? ` · 👀 ${specs.length}` : "");
   const g = genreOf(G.genre);
   $("phaseTxt").textContent = (PH[G.phase] || "") + (G.phase !== "lobby" ? ` · ${g.emoji} ${g.label}` : "");
   const inLobby = G.phase === "lobby";
   $("lobby").classList.toggle("hidden", !inLobby);
   $("raceBox").classList.toggle("hidden", inLobby);
-  if (inLobby) renderLobby(ids, host);
+  if (inLobby) renderLobby(players, specs, host);
   else {
     renderLanes();
     const racing = G.phase === "count" || G.phase === "race";
-    const me = G.players.includes(myId);
+    const me = G.players.includes(myId) && !mySpec;
     $("typing").classList.toggle("hidden", !(racing && me && !done));
     $("endBox").classList.toggle("hidden", G.phase !== "end");
     if (G.phase === "end") renderEnd(host);
@@ -644,10 +706,11 @@ function render() {
 function setPart(id, key, html) { const el = $(id); if (el._k === key) return false; el._k = key; el.innerHTML = html; return true; }
 function buildLobby() {
   const lob = $("lobby");
-  lob.innerHTML = `<h2>⌨️ 타자 레이스</h2><p id="lobHint"></p><div id="lobPlayers" class="lobbyplayers"></div>
+  lob.innerHTML = `<h2>⌨️ 타자 레이스</h2><p id="lobHint"></p><div id="lobPlayers" class="lobbyplayers"></div><div id="lobSpecs" class="specline"></div><div id="lobMe"></div>
     <div id="lobGenre" class="genres"></div><div class="tip" id="lobTip"></div><div class="setbox" id="lobSet"></div><div id="lobCustom" class="customwrap"></div>
     <button id="startBtn" class="primary">달리기 시작! 🚀</button>`;
   $("startBtn").onclick = startRace;
+  $("lobMe").onclick = (e) => { if (e.target.closest("#specToggle")) setSpectator(!mySpec); };
   $("lobGenre").onclick = (e) => { const b = e.target.closest(".gbtn"); if (b && isHost()) emit({ t: "settings", genre: b.dataset.g }); };
   $("lobSet").onchange = (e) => {
     if (!isHost()) return;
@@ -662,12 +725,14 @@ function updateCustomCnt() {
   const n = splitLines(customText, CUSTOM_LINE_LEN, CUSTOM_MAX_LINES).length;
   el.textContent = n ? `${n}줄 × ${G.rep}번 = ${Math.min(CUSTOM_MAX_ITEMS, n * G.rep)}줄이 결승선!` : "글을 한 줄 이상 써 주세요";
 }
-function renderLobby(ids, host) {
+function renderLobby(players, specs, host) {
   const lob = $("lobby"); if (!lob._built) buildLobby();
   const g = genreOf(G.genre);
-  $("lobHint").textContent = host ? `시작하기 전에 장르를 골라요 (최대 ${MAX_PLAYERS}명)` : "방장(👑)이 장르를 고르고 시작하길 기다리는 중...";
-  setPart("lobPlayers", ids.map((id) => id + present[id].name).join("|") + "|" + ids[0] + "|" + myId,
-    ids.map((id, i) => `<div class="lp">${avatar(id)}<span>${esc(present[id].name)}${i === 0 ? " 👑" : ""}${id === myId ? " (나)" : ""}</span></div>`).join(""));
+  $("lobHint").textContent = host ? `시작하기 전에 장르를 골라요 (참가 최대 ${MAX_PLAYERS}명, 관전은 제한 없음)` : "방장(👑)이 장르를 고르고 시작하길 기다리는 중...";
+  setPart("lobPlayers", players.map((id) => id + present[id].name).join("|") + "|" + hostOrder()[0] + "|" + myId,
+    players.map((id) => `<div class="lp">${avatar(id)}<span>${esc(present[id].name)}${id === hostOrder()[0] ? " 👑" : ""}${id === myId ? " (나)" : ""}</span></div>`).join(""));
+  setPart("lobSpecs", specs.join("|"), specs.length ? `👀 관전: ${specs.map((id) => esc(present[id].name)).join(", ")}` : "");
+  setPart("lobMe", String(mySpec), `${mySpec ? '<span class="specbadge">👀 지금 관전 모드예요</span> ' : ""}<button class="togglebtn" id="specToggle">${mySpec ? "🙋 나도 참가할래요" : "👀 관전으로 바꾸기"}</button>`);
   setPart("lobGenre", G.genre + "|" + host,
     GENRES.map((x) => `<button class="gbtn ${x.id === G.genre ? "on" : ""}" data-g="${x.id}" ${host ? "" : "disabled"}><span class="ge">${x.emoji}</span><b>${x.label}</b><small>${x.desc}</small></button>`).join(""));
   setPart("lobTip", G.genre, g.tip);
@@ -681,35 +746,36 @@ function renderLobby(ids, host) {
       ? `결승선까지 <select id="setGoal">${g.goals.map((n) => `<option value="${n}" ${n === G.goal ? "selected" : ""}>${n}${g.unit}</option>`).join("")}</select>`
       : `결승선까지 <span class="pill">${G.goal}${g.unit}</span> <span style="color:var(--muted);font-weight:400">(방장이 정해요)</span>`);
   }
-  $("lobSet").classList.remove("hidden");
-  const custKey = `${G.genre === "custom"}|${host}`;
-  if (setPart("lobCustom", custKey, G.genre !== "custom" ? "" : host
+  if (setPart("lobCustom", `${G.genre === "custom"}|${host}`, G.genre !== "custom" ? "" : host
     ? `<textarea id="customTa" placeholder="치고 싶은 글을 붙여넣거나 써 주세요. 한 줄만 써도 돼요!&#10;줄바꿈마다 한 줄씩 나와요. 너무 긴 줄은 자동으로 40자씩 나눠요."></textarea><div class="cnt" id="customCnt"></div>`
     : `<p>📝 방장이 글을 쓰는 중이에요. 시작하면 보여요!</p>`)) {
-    if (G.genre === "custom" && host) { $("customTa").value = customText; }
+    if (G.genre === "custom" && host) $("customTa").value = customText;
   }
   if (G.genre === "custom" && host) updateCustomCnt();
   $("startBtn").classList.toggle("hidden", !host);
-  $("startBtn").disabled = ids.length < MIN_PLAYERS;
+  $("startBtn").disabled = players.length < MIN_PLAYERS;
 }
 function renderLanes() {
   if (G.phase === "lobby") return;
+  let leader = null, max = 0; for (const id of G.players) if ((prog[id] || 0) > max) { max = prog[id]; leader = id; }
   const rows = G.players.map((id) => {
     const n = prog[id] || 0, pct = Math.min(100, (n / G.total) * 100), fin = n >= G.total;
-    return `<div class="lane ${id === myId ? "me" : ""} ${fin ? "done" : ""}">${avatar(id)}<span class="nm">${esc(nameOf(id))}</span>
+    return `<div class="lane ${id === myId ? "me" : ""} ${fin ? "done" : ""}">${avatar(id)}<span class="nm">${id === leader && G.players.length > 1 ? "👑" : ""}${esc(nameOf(id))}</span>
       <div class="track"><div class="fill" style="width:${pct}%"></div><div class="runner" style="left:${pct}%">${emojiOf(id)}</div><span class="flag">🏁</span></div>
       <span class="num">${fin && times[id] ? fmt(times[id]) : n + "/" + G.total}</span></div>`;
   }).join("");
   const el = $("lanes"); if (el._h !== rows) { el._h = rows; el.innerHTML = rows; }
 }
 function renderEnd(host) {
-  const medals = ["🥇", "🥈", "🥉"], g = genreOf(G.genre);
+  const medals = ["🥇", "🥈", "🥉"], g = genreOf(G.genre), aw = awardsOf(G.final || [], G.total);
   const rows = (G.final || []).map((r, i) => {
-    const fin = r.n >= G.total, acc = r.n ? Math.max(0, Math.round(((r.n - r.e) / r.n) * 100)) : 0;
+    const fin = r.n >= G.total;
     return `<div class="rank ${r.id === myId ? "me" : ""}"><span class="medal">${medals[i] || i + 1}</span>${avatar(r.id)}<span>${esc(nameOf(r.id))}</span>
-    <span class="rt">${fin ? fmt(r.ms) : `미완주 ${r.n}/${G.total}`}<small>${fin ? `⌨️ ${cpmOf(r.k, r.ms)}타/분 · ` : ""}깔끔하게 친 ${g.unit} ${acc}%</small></span></div>`;
+    <span class="rt">${fin ? fmt(r.ms) : `미완주 ${r.n}/${G.total}`}<small>${fin ? `⌨️ ${cpmOf(r.k, r.ms)}타/분 · ` : ""}깔끔하게 친 ${g.unit} ${accOf(r)}%</small></span>
+    ${aw[r.id] ? `<div class="awards">${aw[r.id].map((a) => `<span class="award">${a}</span>`).join("")}</div>` : ""}</div>`;
   }).join("");
-  const html = `<h2 style="text-align:center">🏆 결과 · ${g.emoji} ${g.label}</h2>${rows}
+  let pb = ""; try { const v = +localStorage.getItem("typingBest_" + G.genre) || 0; if (v) pb = `<div class="pbline">📌 내 ${g.label} 최고 기록: ${v}타/분</div>`; } catch (e) {}
+  const html = `<h2 style="text-align:center">🏆 결과 · ${g.emoji} ${g.label}</h2>${rows}${pb}
     <div style="text-align:center;margin-top:14px">${host ? '<button id="againBtn" class="primary">🔁 한 판 더!</button> <button id="lobbyBtn">대기실로 (장르 바꾸기)</button>' : "<p style='color:var(--muted)'>방장이 다음 판을 정할 거예요</p>"}</div>`;
   const el = $("endBox"); if (el._h === html) return;
   el._h = html; el.innerHTML = html;
@@ -720,10 +786,11 @@ function renderEnd(host) {
 setInterval(() => {
   const now = Date.now();
   if (G.phase === "count") {
-    const left = Math.ceil((cdEnd - now) / 1000);
-    $("cdBig").textContent = left > 0 ? left : "GO!"; $("timerTxt").textContent = ""; $("stat").textContent = "";
+    const left = Math.ceil((cdEnd - now) / 1000), t = left > 0 ? String(left) : "GO!";
+    if ($("cdBig").textContent !== t) { $("cdBig").textContent = t; if (left > 0) beep(520, 0.08, "triangle", 0.06); }
+    $("timerTxt").textContent = ""; $("stat").textContent = "";
   } else if (G.phase === "race") {
-    $("cdBig").textContent = "";
+    if (now - raceStartAt > 700) $("cdBig").textContent = "";
     const el = done ? doneMs : now - raceStartAt;
     $("timerTxt").textContent = fmt(el);
     $("stat").textContent = el > 2000 && myK ? `⌨️ ${cpmOf(myK, el)}타/분` : "";
