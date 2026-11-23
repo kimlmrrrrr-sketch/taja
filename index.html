@@ -108,7 +108,14 @@
   #wordbox.gold .rest { color:var(--gold); } #wordbox.gold::before { content:"⭐ "; font-size:.6em; }
   #wordbox.blur { filter:blur(9px); }
   #nextbox { font-family:var(--display); color:var(--muted); font-size:18px; min-height:26px; }
-  #inp { width:100%; max-width:580px; font-size:24px; text-align:center; margin-top:10px; }
+  .inpwrap { position:relative; width:100%; max-width:580px; margin:10px auto 0; }
+  #inp { width:100%; font-size:24px; text-align:center; color:transparent; caret-color:transparent; }
+  #inp::selection { background:transparent; }
+  #inpView { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:24px; white-space:pre; overflow:hidden; pointer-events:none; padding:0 14px; }
+  #inpView.long { justify-content:flex-end; }
+  #inpView.bad { color:var(--bad); }
+  #inpView .cur { display:inline-block; width:2px; height:1.2em; background:var(--ink); margin-left:2px; animation:blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
   .hint { color:var(--muted); font-size:13px; margin-top:6px; }
   #inp.bad { background:#ffe0e6; animation:shake .2s; }
   @keyframes shake { 25% { transform:translateX(-5px); } 75% { transform:translateX(5px); } }
@@ -174,7 +181,7 @@
       <div id="stat"></div>
       <div id="wordbox"></div>
       <div id="nextbox"></div>
-      <input id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 입력!">
+      <div class="inpwrap"><input id="inp" autocomplete="off" autocapitalize="off" spellcheck="false"><div id="inpView"><span id="inpTxt"></span><i class="cur"></i></div></div>
       <div class="hint" id="hint"></div>
       <div><button id="hitBtn"></button></div>
     </div>
@@ -613,6 +620,16 @@ function onEnd() {
 // 이미 통과한 부분은 consumed(자모 수)로 건너뛰고, 그 뒤에 친 글자만 지금 글감과 비교해요.
 const inp = $("inp");
 const canType = () => G.phase === "race" && G.players.includes(myId) && !mySpec && !done;
+// 입력창에서 이미 통과한 글자는 숨기고, 지금 치는 부분만 보여줘요
+function viewOf(value, consumed) {
+  let acc = 0, out = "";
+  for (const ch of String(value)) {
+    const len = jam(ch).length;
+    if (acc + len <= consumed) { acc += len; continue; }
+    out += acc < consumed ? jam(ch).slice(consumed - acc) : ch; acc += len;
+  }
+  return out.replace(/^\s+/, "");
+}
 function renderWord() {
   const w = G.words[myN]; if (w == null) return;
   const seg = segOf(inp.value, consumed), okPrefix = segPrefix(seg, w), ok = okChars(seg, w);
@@ -620,6 +637,8 @@ function renderWord() {
   $("wordbox").dataset.sz = w.length > 22 ? 3 : w.length > 12 ? 2 : w.length > 8 ? 1 : 0;
   $("wordbox").classList.toggle("gold", isGold(myN));
   inp.classList.toggle("bad", !okPrefix);
+  const vw = viewOf(inp.value, consumed); $("inpTxt").textContent = vw; $("inpView").classList.toggle("long", vw.length > 20); $("inpView").classList.toggle("bad", !okPrefix);
+  $("inpView").dataset.empty = vw ? "" : "1";
   const nx = (i) => (isGold(i) ? "⭐" : "") + G.words[i];
   $("nextbox").textContent = isLine() ? (G.words[myN + 1] ? "다음 ▶ " + nx(myN + 1) : "") : [1, 2, 3].filter((d) => G.words[myN + d] != null).map((d) => nx(myN + d)).join("   ");
   $("combo").textContent = combo >= 2 ? `🔥 콤보 x${combo}` : "";
