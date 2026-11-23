@@ -82,11 +82,12 @@
   #combo { font-family:var(--display); font-size:22px; color:var(--warn); min-height:30px; }
   #combo.pop { animation:pop .25s; }
   @keyframes pop { 50% { transform:scale(1.35); } }
-  #wordbox { font-family:"Consolas","D2Coding",ui-monospace,monospace; font-size:54px; font-weight:800; letter-spacing:2px; margin:6px 0; min-height:70px; transition:filter .2s; }
+  #wordbox { font-family:var(--display); font-size:58px; font-weight:400; letter-spacing:3px; margin:6px 0; min-height:70px; transition:filter .2s; }
   #wordbox .ok { color:var(--good); } #wordbox .rest { color:var(--ink); } #wordbox .bad { color:var(--bad); }
   #wordbox.blur { filter:blur(9px); }
-  #nextbox { font-family:ui-monospace,monospace; color:var(--muted); font-size:18px; min-height:26px; }
-  #inp { width:100%; max-width:420px; font-size:26px; text-align:center; margin-top:10px; font-family:ui-monospace,monospace; }
+  #nextbox { font-family:var(--display); color:var(--muted); font-size:18px; min-height:26px; }
+  #inp { width:100%; max-width:420px; font-size:26px; text-align:center; margin-top:10px; }
+  .hint { color:var(--muted); font-size:13px; margin-top:6px; }
   #inp.bad { background:#ffe0e6; animation:shake .2s; }
   @keyframes shake { 25% { transform:translateX(-5px); } 75% { transform:translateX(5px); } }
   #hitBtn { margin-top:12px; background:var(--pink-soft); font-family:var(--display); font-size:18px; }
@@ -97,8 +98,11 @@
   .rank.me { background:var(--yellow-soft); border:2px solid var(--ink); }
   .rank .medal { font-size:26px; width:36px; text-align:center; }
   .rank .rt { margin-left:auto; color:var(--accent); font-family:var(--display); }
-  #feed { font-size:14px; max-height:140px; overflow-y:auto; }
-  #feed div { margin:3px 0; } #feed .hit { color:var(--bad); font-weight:800; } #feed .fin { color:var(--good); font-weight:800; } #feed .sys { color:var(--muted); }
+  #chatlog { font-size:14px; height:150px; overflow-y:auto; padding-right:4px; }
+  #chatlog div { margin:3px 0; word-break:break-all; } #chatlog .hit { color:var(--bad); font-weight:800; } #chatlog .fin { color:var(--good); font-weight:800; } #chatlog .sys { color:var(--muted); }
+  #chatForm { display:flex; gap:8px; margin-top:10px; }
+  #chatForm input { flex:1; min-width:0; padding:8px 12px; }
+  #chatForm button { padding:6px 14px; }
   #toast { position:fixed; left:50%; bottom:28px; transform:translate(-50%,20px); background:var(--ink); color:#fff; padding:10px 18px; border-radius:999px; font-weight:800; opacity:0; pointer-events:none; transition:.25s; z-index:50; }
   #toast.show { opacity:1; transform:translate(-50%,0); }
   @media (max-width:640px) { .topbar { grid-template-columns:1fr; } #cnt { text-align:left; } #wordbox { font-size:38px; } }
@@ -141,13 +145,17 @@
       <div id="combo"></div>
       <div id="wordbox"></div>
       <div id="nextbox"></div>
-      <input id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="여기에 입력!">
+      <input id="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="한글로 치고 Space!" autofocus>
+      <div class="hint">다 치면 <b>Space</b> 또는 <b>Enter</b> → 다음 단어!</div>
       <div><button id="hitBtn">💥 방해 쓰기 (Tab) ×<span id="chg">0</span></button></div>
     </div>
     <div id="endBox" class="card panel hidden"></div>
   </div>
 
-  <div id="feed" class="card panel"></div>
+  <div id="chatbox" class="card panel">
+    <div id="chatlog"></div>
+    <form id="chatForm"><input id="chatIn" maxlength="40" autocomplete="off" placeholder="💬 채팅 (Enter로 보내기)"><button>보내기</button></form>
+  </div>
 </section>
 
 <script>
@@ -163,8 +171,33 @@ const COUNTDOWN_MS = 3500, FINISH_WAIT_MS = 20000;   // 카운트다운 / 1등 �
 const HIT_MS = 3000, MAX_CHARGES = 3, COMBO_FOR_CHARGE = 5;
 
 // <PURE>
-// 단어는 코딩·AI 용어 (영어로 쳐요. 한/영 키를 영어로!)
-const WORDS = ["python","pandas","numpy","tensor","matrix","vector","loop","import","return","string","integer","float","list","tuple","dict","class","object","method","module","package","lambda","filter","sorted","range","print","input","while","break","continue","except","assert","global","slice","index","append","remove","update","model","train","epoch","batch","weight","bias","layer","neuron","sigmoid","relu","softmax","loss","gradient","dataset","feature","label","target","predict","accuracy","recall","precision","overfit","github","commit","branch","merge","deploy","server","client","token","prompt","agent","vision","sensor","wafer","defect","python3","function","variable","boolean","compile","debug","cache","queue","stack","array","search","scale","plot","chart","random","clean"];
+// 단어는 한글이에요. 쌍자음(ㄲㄸㅃㅆㅉ)·ㅒㅖ 같은 어려운 글자는 뺐어요.
+const WORDS = ["라면","치킨","햄버거","김밥","만두","비빔밥","불고기","냉면","우동","초밥","피자","과자","아이스크림","초콜릿","사과","바나나","포도","수박","참외","복숭아","토마토","오이","고구마","감자","양파","마늘","두부","삼겹살",
+  "강아지","고양이","호랑이","하이에나","기린","사슴","거북이","다람쥐","펭귄","문어","고래","상어","독수리","앵무새","원숭이","너구리","도마뱀","하마","사자","곰돌이","햄스터","오리","병아리","나비","잠자리","개구리","달팽이",
+  "노트북","키보드","마우스","모니터","스마트폰","이어폰","충전기","자동차","자전거","지하철","버스","비행기","편의점","도서관","놀이공원","수영장","운동장","체육관","주말","월요일","점심시간","퇴근길","커피","우산","무지개","눈사람","소풍","여행","노래방","영화관","축구","농구","야구","배드민턴","달리기","줄넘기",
+  "하늘","구름","바다","바람","나무","산","강물","호수","햇살","별빛","달빛","노을","소나기","안개","번개","단풍","낙엽","시냇물","폭포","숲속","들판","언덕","모래","파도","은하수",
+  "학교","선생님","친구","가족","어머니","아버지","할머니","할아버지","동생","이웃","교실","운동회","방학","시험","숙제","칠판","공책","연필","지우개","가방","도시락","졸업식",
+  "행복","사랑","우정","희망","용기","웃음","눈물","즐거움","추억","약속","비밀","소원","선물","생일","축하","고마움","미안해","보고싶다",
+  "냉장고","세탁기","청소기","텔레비전","달력","거울","베개","이불","침대","책상","의자","창문","현관","부엌","욕실","주전자","숟가락","젓가락","접시","우유","주스","아침밥","저녁밥","간식",
+  "산책","등산","물고기","캠핑","노래","춤","그림","독서","요리","청소","휴가",
+  "대한민국","서울","부산","제주도","한강","독도","한글","세종대왕","태극기","무궁화","설날","추석","한복","김장","보름달"];
+// 한글은 입력기가 글자를 조립하는 중이라 "파이ㅆ" 처럼 반쪽 글자가 섞여요.
+// 그래서 글자를 키보드로 누르는 낱개 자음·모음 순서로 풀어서 비교해요. (과 → ㄱㅗㅏ)
+const _L = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ", _V = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ";
+const _T = ["", "ㄱ", "ㄲ", "ㄳ", "ㄴ", "ㄵ", "ㄶ", "ㄷ", "ㄹ", "ㄺ", "ㄻ", "ㄼ", "ㄽ", "ㄾ", "ㄿ", "ㅀ", "ㅁ", "ㅂ", "ㅄ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
+const _SPLIT = { "ㄳ": "ㄱㅅ", "ㄵ": "ㄴㅈ", "ㄶ": "ㄴㅎ", "ㄺ": "ㄹㄱ", "ㄻ": "ㄹㅁ", "ㄼ": "ㄹㅂ", "ㄽ": "ㄹㅅ", "ㄾ": "ㄹㅌ", "ㄿ": "ㄹㅍ", "ㅀ": "ㄹㅎ", "ㅄ": "ㅂㅅ",
+  "ㅘ": "ㅗㅏ", "ㅙ": "ㅗㅐ", "ㅚ": "ㅗㅣ", "ㅝ": "ㅜㅓ", "ㅞ": "ㅜㅔ", "ㅟ": "ㅜㅣ", "ㅢ": "ㅡㅣ" };
+function toJamo(str) {
+  let out = "";
+  for (const ch of String(str)) {
+    const c = ch.charCodeAt(0);
+    if (c >= 0xAC00 && c <= 0xD7A3) { const i = c - 0xAC00; out += _L[Math.floor(i / 588)] + _V[Math.floor((i % 588) / 28)] + _T[i % 28]; }
+    else out += ch;
+  }
+  return out.replace(/[ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄㅘㅙㅚㅝㅞㅟㅢ]/g, (m) => _SPLIT[m]);
+}
+// 지금까지 친 글자가 정답 단어의 앞부분과 같은지 (조립 중인 글자도 OK)
+const isPrefix = (typed, word) => toJamo(word).startsWith(toJamo(typed));
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function pickWords(n) { return shuffle([...new Set(WORDS)]).slice(0, n); }
 // 순위: 완주한 사람은 기록(ms) 짧은 순, 못 끝낸 사람은 진행 단어 수 많은 순
@@ -299,7 +332,7 @@ function leaveRoom(msg) {
   if (net && net.leave) net.leave();
   net = null; present = {}; settled = false; seenGid = -1; seenKey = "";
   G = { phase: "lobby", gid: 0, goal: 25, words: [], players: [], names: {}, cd: 0, final: null };
-  $("feed").innerHTML = "";
+  $("chatlog").innerHTML = "";
   $("game").classList.add("hidden"); $("join").classList.remove("hidden");
   history.replaceState(null, "", location.pathname);
   alertBox(msg);
@@ -313,9 +346,25 @@ $("copyBtn").onclick = async () => {
 };
 function feed(t, cls) {
   const d = document.createElement("div"); d.className = cls || ""; d.textContent = t;
-  $("feed").appendChild(d); $("feed").scrollTop = $("feed").scrollHeight;
-  while ($("feed").children.length > 40) $("feed").firstChild.remove();
+  $("chatlog").appendChild(d); $("chatlog").scrollTop = $("chatlog").scrollHeight;
+  while ($("chatlog").children.length > 60) $("chatlog").firstChild.remove();
 }
+const CH_COLORS = ["#ff6b6b", "#f59f00", "#37b24d", "#1c7ed6", "#7048e8", "#e64980", "#0ca678", "#f76707"];
+function addChat(id, name, text) {
+  const d = document.createElement("div"), b = document.createElement("b");
+  b.textContent = name + " "; b.style.color = CH_COLORS[hashId(id) % CH_COLORS.length];
+  d.appendChild(b); d.appendChild(document.createTextNode(text));
+  $("chatlog").appendChild(d); $("chatlog").scrollTop = $("chatlog").scrollHeight;
+  while ($("chatlog").children.length > 60) $("chatlog").firstChild.remove();
+}
+let lastChatAt = 0;
+$("chatForm").onsubmit = (e) => {
+  e.preventDefault();
+  const t = $("chatIn").value.trim(), now = Date.now();
+  if (!t || !net || now - lastChatAt < 300) return;
+  lastChatAt = now; $("chatIn").value = "";
+  emit({ t: "chat", id: myId, name: myName, text: t.slice(0, 40) });
+};
 
 // ===================== 접속자 / 방장 =====================
 function presentIds() { return Object.keys(present).sort((a, b) => present[a].joinedAt - present[b].joinedAt || (a < b ? -1 : 1)); }
@@ -364,8 +413,8 @@ function handle(m) {
       const key = G.gid + ":" + G.phase;
       if (key !== seenKey) {
         seenKey = key;
-        if (G.phase === "count") { cdEnd = Date.now() + G.cd; $("inp").value = ""; feed("🏁 곧 시작해요! 한/영 키를 영어로 바꿔 주세요", "sys"); }
-        if (G.phase === "race") { raceStartAt = Date.now(); $("inp").value = ""; beep(880, 0.2, "triangle", 0.08); setTimeout(() => $("inp").focus(), 30); }
+        if (G.phase === "count") { cdEnd = Date.now() + G.cd; $("inp").value = ""; feed("🏁 곧 시작해요! 한/영 키를 한글로 바꿔 주세요", "sys"); }
+        if (G.phase === "race") { raceStartAt = Date.now(); $("inp").value = ""; beep(880, 0.2, "triangle", 0.08); setTimeout(() => { if (document.activeElement !== $("chatIn")) $("inp").focus(); }, 30); }
         if (G.phase === "end") jingle();
       }
       render();
@@ -385,6 +434,7 @@ function handle(m) {
       feed(`💥 ${nameOf(m.from)} → ${nameOf(m.to)} 방해!`, "hit");
       if (m.to === myId) { hitUntil = Date.now() + HIT_MS; toast("💥 방해당했다! 단어가 흐려져요"); beep(120, 0.3, "sawtooth", 0.08); }
       break;
+    case "chat": if (typeof m.text === "string") addChat(m.id, String(m.name || "?").slice(0, 10), m.text.slice(0, 40)); break;
     case "lobby": if (isHost() && G.phase === "end") { G.phase = "lobby"; G.final = null; pushState(); } break;
   }
 }
@@ -394,27 +444,36 @@ const inp = $("inp");
 const canType = () => G.phase === "race" && G.players.includes(myId) && !done;
 function renderWord() {
   const w = G.words[myN]; if (w == null) return;
-  const v = inp.value.trim().toLowerCase();
-  let ok = 0; while (ok < v.length && ok < w.length && v[ok] === w[ok]) ok++;
-  const bad = v.length > ok;
-  $("wordbox").innerHTML = `<span class="ok">${esc(w.slice(0, ok))}</span><span class="${bad ? "bad" : "rest"}">${esc(w.slice(ok))}</span>`;
+  const v = inp.value.trim(), okPrefix = isPrefix(v, w);
+  // 완성된 글자 단위로 초록색 표시 (조립 중인 마지막 글자는 아직 회색)
+  let ok = 0; while (ok < v.length && ok < w.length && v[ok] === w[ok] && (ok < v.length - 1 || v === w)) ok++;
+  $("wordbox").innerHTML = `<span class="ok">${esc(w.slice(0, ok))}</span><span class="${okPrefix ? "rest" : "bad"}">${esc(w.slice(ok))}</span>`;
   $("nextbox").textContent = G.words.slice(myN + 1, myN + 4).join("   ");
   $("combo").textContent = combo >= 2 ? `🔥 콤보 x${combo}` : "";
   $("chg").textContent = charges;
   $("hitBtn").disabled = charges <= 0;
 }
-inp.addEventListener("input", () => {
+function flagError() {
+  if (!errFlag) { errFlag = true; combo = 0; beep(150, 0.15, "sawtooth", 0.07); }
+  inp.classList.add("bad"); setTimeout(() => inp.classList.remove("bad"), 200);
+}
+inp.addEventListener("input", (e) => {
   if (!canType()) { inp.value = ""; return; }
-  const v = inp.value.trim().toLowerCase(), w = G.words[myN];
-  if (!w.startsWith(v)) {
-    if (!errFlag) { errFlag = true; combo = 0; beep(150, 0.15, "sawtooth", 0.07); }
-    inp.classList.add("bad"); setTimeout(() => inp.classList.remove("bad"), 200);
-  }
-  if (v === w) correct();
+  const v = inp.value.trim(), w = G.words[myN];
+  if (!isPrefix(v, w)) flagError();
+  if (!(e && e.isComposing) && v === w) correct();   // 조립이 끝난 상태에서 정확히 맞으면 바로 통과
   renderWord();
 });
+// 한글은 마지막 글자가 조립 중일 수 있어서, Space/Enter를 뗐을 때 최종 확인해요
+inp.addEventListener("keyup", (e) => {
+  if (!canType() || (e.code !== "Space" && e.code !== "Enter")) return;
+  const v = inp.value.trim(), w = G.words[myN];
+  if (!v) { inp.value = ""; return; }
+  if (v === w) correct();
+  else { flagError(); inp.value = ""; renderWord(); }
+});
 inp.addEventListener("keydown", (e) => { if (e.key === "Tab") { e.preventDefault(); useHit(); } });
-document.addEventListener("click", () => { if (canType()) inp.focus(); });
+document.addEventListener("click", (e) => { if (canType() && !e.target.closest("#chatbox")) inp.focus(); });
 function correct() {
   myN++; combo++; errFlag = false; inp.value = "";
   beep(440 * Math.pow(1.06, Math.min(combo, 14)), 0.07, "square", 0.05);
@@ -467,7 +526,7 @@ function renderLobby(ids, host) {
   const html = `<h2>⌨️ 타자 레이스</h2>
     <p>${host ? `참가자 ${MIN_PLAYERS}명 이상이면 시작할 수 있어요 (최대 ${MAX_PLAYERS}명)` : "방장(👑)이 시작하길 기다리는 중..."}</p>
     <div class="lobbyplayers">${ids.map((id, i) => `<div class="lp">${avatar(id)}<span>${esc(present[id].name)}${i === 0 ? " 👑" : ""}${id === myId ? " (나)" : ""}</span></div>`).join("")}</div>
-    <div class="tip">단어는 코딩·AI 용어(영어)예요. <b>한/영 키를 영어로</b> 바꿔 주세요!<br>5콤보마다 💥 방해 아이템 1개 → <b>Tab</b>을 누르면 1등의 단어가 3초 동안 흐려져요. 틀리면 콤보가 끊겨요.</div>
+    <div class="tip">단어는 일상 한글 낱말이에요(음식·동물·자연·학교·생활 등). <b>한/영 키를 한글로</b> 두고, 다 치면 <b>Space</b> 또는 <b>Enter</b>로 넘겨요!<br>5콤보마다 💥 방해 아이템 1개 → <b>Tab</b>을 누르면 1등의 단어가 3초 동안 흐려져요. 틀리면 콤보가 끊겨요.</div>
     <div class="setbox">${host
       ? `결승선까지 <select id="setGoal">${GOAL_OPTS.map((n) => `<option value="${n}" ${n === G.goal ? "selected" : ""}>${n}단어</option>`).join("")}</select>`
       : `결승선까지 <span class="pill">${G.goal}단어</span> <span style="color:var(--muted);font-weight:400">(방장이 정해요)</span>`}</div>
